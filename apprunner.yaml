@@ -3,13 +3,17 @@ runtime: python3                # has python, pip, setuptools, wheel, virtualenv
 build:
   commands:
     pre-build:
+      # On this runtime it seems SQLite is too old... how old??
+      # 08-04-2022 06:56:10 PM sqlite3.NotSupportedError: deterministic=True requires SQLite 3.8.3 or higher
+      - apt-get update -y
+      - apt-get install -y  sqlite3
       - pip install wagtail
       - wagtail start site2
     build:
       - pip install -r site2/requirements.txt
     post-build:
-      - python site2/manage.py migrate
-      - python site2/manage.py createsuperuser --noinput --username chris --email chris@v-studios.com --password KILLME
+      - site2/manage.py migrate
+      - DJANGO_SUPERUSER_PASSWORD=KILLME site2/manage.py createsuperuser --noinput --username chris2 --email chris@v-studios.com
 run:
   command: python site2/manage.py runserver
   runtime-version: 3.8
