@@ -1,0 +1,25 @@
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apprunner-vpcconnector.html
+#
+# You cannot re-deploy this with changes because the name will already be used; delete and deploy again.
+
+Parameters:
+  VpcStack:
+    Type: String
+    Default: wagtail-apprunner-vpc
+
+Resources:
+  VpcConnector:
+    Type: AWS::AppRunner::VpcConnector
+    Properties: 
+      # default uses VPC default SG which allows all outbound
+      SecurityGroups: 
+        - Fn::ImportValue:
+            Fn::Sub: ${VpcStack}-NoIngressSecurityGroup
+      Subnets: 
+        - Fn::ImportValue:
+            Fn::Sub: ${VpcStack}-PublicSubnet1
+        - Fn::ImportValue:
+            Fn::Sub: ${VpcStack}-PublicSubnet2
+      # Tags: 
+      #   - Tag
+      VpcConnectorName: wagtail-apprunner-vpc-connector
