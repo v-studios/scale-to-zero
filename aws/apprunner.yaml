@@ -1,0 +1,19 @@
+version: 1.0
+runtime: python3                # has python, pip, setuptools, wheel, virtualenv
+build:
+  commands:
+    build:
+      - pip install wagtail
+      - wagtail start mysite
+      - cd mysite
+      - pip install -r requirements.txt
+    post-build:
+      - cd mysite
+      - ./manage.py migrate
+      - ./manage.py createsuperuser --noinput --username chris --email chris@v-studios.com --password WaggyMcWagface
+run:
+  command: ./manage.py runserver
+  runtime-version: 3.8
+  network:
+    port: 8000                  # wagtail default
+    env: APP_PORT
