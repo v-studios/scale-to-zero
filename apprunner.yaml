@@ -5,11 +5,14 @@ build:
     pre-build:
       # On this runtime it seems SQLite is too old... how old??
       # 08-04-2022 06:56:10 PM sqlite3.NotSupportedError: deterministic=True requires SQLite 3.8.3 or higher
+      - sqlite --version || echo SQLITE NOT FOUND
       - apt-get update -y
-      - apt-get install -y  sqlite3
+      - apt-get install -y sqlite3
+      - sqlite --version
+    build:
+      - sqlite --version
       - pip install wagtail
       - wagtail start site2
-    build:
       - pip install -r site2/requirements.txt
     post-build:
       - site2/manage.py migrate
