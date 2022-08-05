@@ -12,7 +12,7 @@ build:
       - curl https://www.sqlite.org/2022/sqlite-autoconf-3380500.tar.gz | tar xzvf -
       - cd sqlite-autoconf-3380500 && ./configure && make && make install 
     build:
-      - sqlite --version
+      - sqlite3 --version
       - pip install wagtail
       - wagtail start site2
       - pip install -r site2/requirements.txt
