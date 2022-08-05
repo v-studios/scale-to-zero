@@ -20,6 +20,7 @@ build:
       - cd sqlite-autoconf-3380500 && ./configure && make && make install 
       - sqlite3 --version
       - /usr/local/bin/sqlite3 --version
+      - which sqlite3 || echo "NO WHICH SQLITE3"
       - pip install wagtail
       - wagtail start site2
       - pip install -r site2/requirements.txt
