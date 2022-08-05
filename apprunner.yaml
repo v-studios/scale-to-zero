@@ -8,9 +8,10 @@ build:
       # I'm seeing it saying SQLITE NOT FOUND but then never doing apt stuff
       # - sqlite --version || echo SQLITE NOT FOUND
       # I tried `&&` on the update and install and the build failed silently
-      - apt-get update -y
+      # Even with EPEL, yum installs Sqlite 3.7, try building from source, WTF:
+      - curl https://www.sqlite.org/2022/sqlite-autoconf-3380500.tar.gz | tar xzvf -
+      - cd sqlite-autoconf-3380500 && ./configure && make && make install 
     build:
-      - apt-get install -y sqlite3
       - sqlite --version
       - pip install wagtail
       - wagtail start site2

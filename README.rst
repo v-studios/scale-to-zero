@@ -20,6 +20,56 @@ See:
   <https://www.youtube.com/watch?v=ABvx7radhw4>`_
 * AWS AppRunner `FAQs <https://aws.amazon.com/apprunner/faqs/>`_
 
+Unfortunately, it is NOT FedRAMPed at this time.
+
+Using apprunner.yaml
+====================
+
+We can have App Runner build and deploy on commit, like Heroku does,
+by defining an ``apprunner.yaml`` file that describes ``pre-build``,
+``build``, ``post-build``, and ``run`` commands (and a few others). It
+appears to take these commands and build a Docker image, which it then
+deploys and runs.
+
+I've had no success with, it fails mysteriously, and I don't have
+visiblity to debug it. When it starts to run (maybe migrate?), it
+complains about a too-old sqlite3::
+
+  08-04-2022 07:21:27 PM sqlite3.NotSupportedError: deterministic=True requires SQLite 3.8.3 or higher
+
+and the deploy fails. 
+
+I've revised it to only do apt-get install in the pre-build, but it appears this may not be a Debian based system::
+
+  [Build] [91m/bin/sh: apt-get: command not found
+  [Build]  ---> Running in 530035770d6b
+  [Build] Step 4/9 : RUN apt-get install -y sqlite3
+
+I thougt the base image for ``python`` version ``3.8`` would be the
+stock dockerhub ``python:3.8`` but that's based on Debian which has
+yum. Now I think maybe AWS is using AmazonLinux2, and when I try that
+I see that it does have an old version of Sqlitte3::
+
+  % docker run -it --rm amazonlinux
+  bash-4.2# sqlite3 --version
+  3.7.17 2013-05-20 00:56:22 118a3b35693b134d56ebd780123b7fd6f1497668
+
+But I cannot get a newer version::
+
+  bash-4.2# yum update -y sqlite
+  Loaded plugins: ovl, priorities
+  No packages marked for update
+
+It appears I have to add a repo pointing at a modern verions. Adding
+the ``epel`` repo and trying to do an install or update still gives me
+sqlite 3.7.
+
+Trying to install with Sqlite site's .zip shows my AL2 doesn't have
+``zip``. Trying to install into my AL2 says I need libc.so.6 and
+others.
+
+Smells like a :squirrel:-from-hell.
+
 VPC for RDS
 ===========
 
