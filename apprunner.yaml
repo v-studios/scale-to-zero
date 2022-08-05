@@ -3,6 +3,7 @@ runtime: python3                # has python, pip, setuptools, wheel, virtualenv
 
 build:
   commands:
+    # It looks like `cd` commands are stickey, each command is NOT in a subshell, so return back up
     pre-build:
       # On this runtime it seems SQLite is too old... how old??
       # 08-04-2022 06:56:10 PM sqlite3.NotSupportedError: deterministic=True requires SQLite 3.8.3 or higher
@@ -17,7 +18,7 @@ build:
       - echo "PATH=$PATH"
       - echo "PATH_HACKED=$PATH_HACKED"
       - curl https://www.sqlite.org/2022/sqlite-autoconf-3380500.tar.gz | tar xzvf -
-      - cd sqlite-autoconf-3380500 && ./configure && make && make install 
+      - cd sqlite-autoconf-3380500 && ./configure && make && make install && cd .. && rm -r sqlite-autoconf-3380500 && rm sqlite-autoconf-3380500.tar.gz
       - sqlite3 --version
       - /usr/local/bin/sqlite3 --version
       - which sqlite3 || echo "NO WHICH SQLITE3"
