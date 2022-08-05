@@ -156,7 +156,10 @@ refresh anything (have to get out of the car, get into the car). If
 there's some syntax/format/hierarchy error in the YAML, the deploy
 will fail after 5 minutes with no errors.
 
-I don't know if this is true only with the ``apprunner.yaml`` approach or we'll have the same annoyances if we build our own image and launch from ECR. 
+I don't know if this is true only with the ``apprunner.yaml`` approach or we'll have the same annoyances if we build our own image and launch from ECR.
+
+Hell, now I don't know where "site2" dir is. Fuck it, build it in our
+own Dockerfile where at least it's localhost whack-a-mole.
 
 VPC for RDS
 ===========
