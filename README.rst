@@ -90,7 +90,41 @@ Now, in the App logs we see some dir problem; is this from post-build? who can t
 
   08-05-2022 01:42:21 PM python: can't open file 'site2/manage.py': [Errno 2] No such file or directory
 
-Is this because I tweaked ``run`` PATH? untweak it, it used to run... and find wrong 
+Is this because I tweaked ``run`` PATH? untweak it, it used to run... and find wrong; in build logs
+
+  Creating a Wagtail project called site2
+  [Build] Success! site2 has been created
+
+  [Build] Step 4/9 : RUN sqlite3 --version
+  [Build] 3.35.2 2021-03-17 19:07:21 ea80f3002f4120f5dcee76e8779dfdc88e1e096c5cdd06904c20fd26d50c3827
+  [Build] Step 5/9 : RUN /usr/local/bin/sqlite3 --version
+  [Build] 3.35.2 2021-03-17 19:07:21 ea80f3002f4120f5dcee76e8779dfdc88e1e096c5cdd06904c20fd26d50c3827
+
+  [then installs wagtail]
+
+  [PostBuild] POST-BUILD MIGRATE
+
+Reverse chrono Deployment service logs::
+
+  08-05-2022 02:01:32 PM [PostBuild] drwxrwxr-x 6 codebuild-user codebuild-user 4096 Aug  5 18:01 sqlite-autoconf-3380500
+  08-05-2022 02:01:32 PM [PostBuild] drwxr-xr-x 2 root           root             48 Aug  5 17:58 aws
+  08-05-2022 02:01:32 PM [PostBuild] -rw-rw-r-- 1 root           root           1687 Aug  5 17:54 apprunner.yaml
+  08-05-2022 02:01:32 PM [PostBuild] -rw-rw-r-- 1 root           root           5666 Aug  5 17:54 README.rst
+  08-05-2022 02:01:32 PM [PostBuild] -rw-r--r-- 1 root           root            265 Aug  5 18:01 Dockerfile
+  08-05-2022 02:01:32 PM [PostBuild] -rw-rw-r-- 1 root           root             36 Aug  5 17:54 .gitignore
+  08-05-2022 02:01:32 PM [PostBuild] drwxr-xr-x 3 root           root             17 Aug  5 17:58 ..
+  08-05-2022 02:01:32 PM [PostBuild] drwxr-xr-x 4 root           root            124 Aug  5 18:01 .
+  08-05-2022 02:01:32 PM [PostBuild] total 24
+  08-05-2022 02:01:32 PM [PostBuild] POST-BUILD MIGRATE
+
+So the BUILD process is in a separate container. That suggest the
+PRE-BUILD is too, so we won't have the SQLite3 we installed there.
+This is insane.
+
+What is the image process for pre-build, build, post-build, then run?
+Try doing everything in Build.
+
+
 
 apprunner seems young
 =====================
@@ -100,7 +134,9 @@ comes before /usr/bin, it's still finding the system version which
 fails. 
 
 We need to be able to launch locally the AL2+Python image they're
-using so we can see what PATH is and what it's trying to do.
+using so we can see what PATH is and what it's trying to do. Does this log provide a hint?::
+
+  [Build] Step 1/9 : FROM 082388193175.dkr.ecr.us-east-1.amazonaws.com/awsfusionruntime-python3:3.8
 
 Can we set ``env`` variables based on existing variables, like
 ``PATH`` or will it treat the ``$PATH`` literally?

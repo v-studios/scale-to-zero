@@ -11,21 +11,24 @@ build:
       # I tried `&&` on the update and install and the build failed silently
       # Even with EPEL, yum installs Sqlite 3.7
       # Gawd, build from source gives 3.38.5 2022-05-06 15:25:27
+      - echo "THIS IS PRE-BUILD"
+    build:
+      - echo "THIS IS BUILD"
       - echo "PATH=$PATH"
       - echo "PATH_HACKED=$PATH_HACKED"
       - curl https://www.sqlite.org/2022/sqlite-autoconf-3380500.tar.gz | tar xzvf -
       - cd sqlite-autoconf-3380500 && ./configure && make && make install 
-    build:
       - sqlite3 --version
       - /usr/local/bin/sqlite3 --version
       - pip install wagtail
       - wagtail start site2
       - pip install -r site2/requirements.txt
-    post-build:
       - echo "POST-BUILD MIGRATE"
       - pwd && ls -al
       - site2/manage.py migrate
       - DJANGO_SUPERUSER_PASSWORD=KILLME site2/manage.py createsuperuser --noinput --username chris2 --email chris@v-studios.com
+    post-build:
+      - echo "THIS IS POST-BUILD"
   env:                        # is this read by the build, so we get /usr/local/sqlite3 instead of /usr/bin?
     - name: PATH_HACKED
       value: "/usr/local/bin:${PATH}"
