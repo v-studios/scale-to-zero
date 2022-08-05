@@ -161,6 +161,33 @@ I don't know if this is true only with the ``apprunner.yaml`` approach or we'll 
 Hell, now I don't know where "site2" dir is. Fuck it, build it in our
 own Dockerfile where at least it's localhost whack-a-mole.
 
+Docker-based Deployment
+=======================
+
+I created a multi-stage Dockerfile that installs, migrates, and runs
+wagtail. Now I want to deploy it to App Runner.
+
+I've created a ``Makefile`` that builds, tags, and uploads to ECR.
+
+In App Runner console I created a service from ECR and told it to
+create the requierd IAM Role allowing AR to access ECR.
+
+It deployed and runs it, I can see it in the provided URL.
+
+However when I try to login it complains:
+
+  Forbidden (403)
+  CSRF verification failed. Request aborted.
+  Origin checking failed - https://2mmyr8wk23.us-east-1.awsapprunner.com does not match any trusted origins.
+
+I didn't see this when run locally, maybe it's something I can set in the dev.py? 
+
+
+Quesitons
+=========
+How do we get it to notice and deploy a new version? roll-back?
+
+
 VPC for RDS
 ===========
 
