@@ -74,6 +74,45 @@ others.
 
 Smells like a :squirrel:-from-hell.
 
+And yet I'm continuing. To build from source. Display and mangle PATH.
+
+  PRE-BUILD PATH=/usr/local/bin/sbt/bin:/root/.goenv/shims:/root/.goenv/bin:/go/bin:/root/.phpenv/shims:/root/.phpenv/bin:/root/.pyenv/shims:/root/.pyenv/bin:/root/.rbenv/shims:/usr/local/rbenv/bin:/usr/local/rbenv/shims:/root/.dotnet/:/root/.dotnet/tools/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tools:/usr/local/android-sdk-linux/tools:/usr/local/android-sdk-linux/tools/bin:/usr/local/android-sdk-linux/platform-tools:/codebuild/user/bin
+
+  BUILD PATH=/usr/local/bin/sbt/bin:/root/.goenv/shims:/root/.goenv/bin:/go/bin:/root/.phpenv/shims:/root/.phpenv/bin:/root/.pyenv/shims:/root/.pyenv/bin:/root/.rbenv/shims:/usr/local/rbenv/bin:/usr/local/rbenv/shims:/root/.dotnet/:/root/.dotnet/tools/
+  :/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tools:/usr/local/android-sdk-linux/tools:/usr/local/android-sdk-linux/tools/bin:/usr/local/android-sdk-linux/platform-tools:/codebuild/user/bin
+
+  POST-BUILD PATH=/usr/local/bin/sbt/bin:/root/.goenv/shims:/root/.goenv/bin:/go/bin:/root/.phpenv/shims:/root/.phpenv/bin:/root/.pyenv/shims:/root/.pyenv/bin:/root/.rbenv/shims:/usr/local/rbenv/bin:/usr/local/rbenv/shims:/root/.dotnet/:/root/.dotnet/tools/
+  :/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tools:/usr/local/android-sdk-linux/tools:/usr/local/android-sdk-linux/tools/bin:/usr/local/android-sdk-linux/platform-tools:/codebuild/user/bin
+
+We see the BUILD and POST-BUILD PATH have /usr/local/bin/ before /usr/bin so we SHOULD find our sqlite3
+
+Now, in the App logs we see some dir problem; is this from post-build? who can tell??::
+
+  08-05-2022 01:42:21 PM python: can't open file 'site2/manage.py': [Errno 2] No such file or directory
+
+Is this because I tweaked ``run`` PATH? untweak it, it used to run... and find wrong 
+
+apprunner seems young
+=====================
+
+Even after installing sqlite3 into /usr/local/bin, which on AL2 native
+comes before /usr/bin, it's still finding the system version which
+fails. 
+
+We need to be able to launch locally the AL2+Python image they're
+using so we can see what PATH is and what it's trying to do.
+
+Can we set ``env`` variables based on existing variables, like
+``PATH`` or will it treat the ``$PATH`` literally?
+
+The WebUI for building from source is wonky. Things don't
+auto-refresh. Hitting the refresh icon in the Deployment Logs doesn't
+refresh anything (have to get out of the car, get into the car). If
+there's some syntax/format/hierarchy error in the YAML, the deploy
+will fail after 5 minutes with no errors.
+
+I don't know if this is true only with the ``apprunner.yaml`` approach or we'll have the same annoyances if we build our own image and launch from ECR. 
+
 VPC for RDS
 ===========
 
