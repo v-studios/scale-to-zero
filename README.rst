@@ -39,16 +39,20 @@ complains about a too-old sqlite3::
 
 and the deploy fails. 
 
-I've revised it to only do apt-get install in the pre-build, but it appears this may not be a Debian based system::
+I've revised it to only do apt-get install in the pre-build, but it
+appears this may not be a Debian based system, like DockerHub's python:3.8::
 
   [Build] [91m/bin/sh: apt-get: command not found
   [Build]  ---> Running in 530035770d6b
   [Build] Step 4/9 : RUN apt-get install -y sqlite3
 
-I thougt the base image for ``python`` version ``3.8`` would be the
-stock dockerhub ``python:3.8`` but that's based on Debian which has
-yum. Now I think maybe AWS is using AmazonLinux2, and when I try that
-I see that it does have an old version of Sqlitte3::
+AWS is using AmazonLinux2:
+
+  This image is based on the Amazon Linux Docker image and contains
+the runtime package for a version of Python and some tools and popular
+dependency packages.
+
+When I run that I see that it does have an ancient version of Sqlitte3::
 
   % docker run -it --rm amazonlinux
   bash-4.2# sqlite3 --version
