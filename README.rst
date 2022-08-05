@@ -124,6 +124,15 @@ This is insane.
 What is the image process for pre-build, build, post-build, then run?
 Try doing everything in Build.
 
+Found that ``cd`` is sticky so we have to return to our dir, good, it builds.
+
+Then fails to ./manage.py::
+
+  08-05-2022 04:13:45 PM ModuleNotFoundError: No module named 'django'
+  08-05-2022 04:13:45 PM     from django.core.management import execute_from_command_line
+  08-05-2022 04:13:45 PM   File "site2/manage.py", line 8, in <module>
+
+Try /VENV  
 
 
 apprunner seems young

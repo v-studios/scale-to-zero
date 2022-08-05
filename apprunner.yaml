@@ -22,11 +22,15 @@ build:
       - sqlite3 --version
       - /usr/local/bin/sqlite3 --version
       - which sqlite3 || echo "NO WHICH SQLITE3"
-      - pip install wagtail
+      - python -m venv /VENV
+      - /VENV/bin/pip install wagtail
       - wagtail start site2
-      - pip install -r site2/requirements.txt
-      - echo "POST-BUILD MIGRATE"
+      - /VENV/bin/pip install -r site2/requirements.txt
+      - echo "CURRENT DIR:"
       - pwd && ls -al
+      - echo "SITE2 DIR:"
+      - ls -al site2
+      - echo "ABOUT TO MIGRATE..."
       - site2/manage.py migrate
       - DJANGO_SUPERUSER_PASSWORD=KILLME site2/manage.py createsuperuser --noinput --username chris2 --email chris@v-studios.com
     post-build:
@@ -36,7 +40,7 @@ build:
       value: "/usr/local/bin:${PATH}"
 
 run:
-  command: python site2/manage.py runserver
+  command: site2/manage.py runserver
   env:
     - name: PATH_RUN
       value: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
