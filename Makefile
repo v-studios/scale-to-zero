@@ -8,8 +8,11 @@ ECR_REG := ${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com
 ECR_REG_URL = https://${ECR_REG}
 ECR_REG_REPO_TAG := ${ECR_REG}/${APP_NAME}:${APP_TAG}
 
+ecr_push: build ecr_login ecr_create
+	docker push ${ECR_REG_REPO_TAG}
+
 build: Dockerfile
-	docker build -t ${APP_NAME} .
+	docker build -t ${APP_NAME} --progress=plain .
 	docker build -t ${ECR_REG_REPO_TAG} .
 
 ecr_login:
@@ -18,8 +21,6 @@ ecr_login:
 ecr_create: ecr_login
 	aws ecr describe-repositories --repository-names=${APP_NAME} || aws ecr create-repository --repository-name ${APP_NAME}
 
-ecr_push: build ecr_login ecr_create
-	docker push ${ECR_REG_REPO_TAG}
 
 # TODO: create ECR access role AppRunnerECRAccessRole-wagrun
 # AWS Managed: AWSAppRunnerServicePolicyForECRAccess:

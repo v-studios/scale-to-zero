@@ -180,12 +180,21 @@ However when I try to login it complains:
   CSRF verification failed. Request aborted.
   Origin checking failed - https://2mmyr8wk23.us-east-1.awsapprunner.com does not match any trusted origins.
 
-I didn't see this when run locally, maybe it's something I can set in the dev.py? 
+I didn't see this when run locally, maybe it's something I can set in
+the dev.py? I added to the Dockerfile this hack which solves the
+problem::
+
+  RUN echo "CSRF_TRUSTED_ORIGINS=['https://*.us-east-1.awsapprunner.com']" >> wagrun/settings/dev.py
+
 
 
 Quesitons
 =========
-How do we get it to notice and deploy a new version? roll-back?
+How do we get it to notice and deploy a new version? roll-back -- manually?
+
+How do I notice and deploy new version automatically? If I hit
+"Deploy", it gets the new image (with the same name:tag). It takes
+about 5 minutes to come online.
 
 
 VPC for RDS

@@ -11,7 +11,8 @@ WORKDIR /app
 RUN pip install wagtail 
 RUN wagtail start wagrun .      # creates /app/wagrun
 RUN pip install -r requirements.txt
-
+# Fix to allow App Runner origins to submit forms
+RUN echo "CSRF_TRUSTED_ORIGINS=['https://*.us-east-1.awsapprunner.com']" >> wagrun/settings/dev.py
 
 FROM ${PYTHON} AS migrate
 ENV PATH=/VENV/bin:${PATH}
