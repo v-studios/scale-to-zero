@@ -13,6 +13,9 @@ Parameters:
     Type: String
     Default: wagrun
     Description: Name for your App Runner service
+  VpcStack:
+    Type: String
+    Default: wagtail-apprunner-vpc
 
 Resources:
 
@@ -43,6 +46,25 @@ Resources:
                 - 'logs:PutLogEvents'
               Resource: '*'
 
+  VpcConnector:                 # Needed to access RDS in VPC
+    Type: AWS::AppRunner::VpcConnector
+    Properties:
+      # default uses VPC default SG which allows all outbound
+      SecurityGroups:
+        - Fn::ImportValue:
+            Fn::Sub: ${VpcStack}-NoIngressSecurityGroup
+      Subnets:
+        # !Split [',' {'Fn::ImportValue': !Sub '${ParentVPCStack}-SubnetsPublic}] #??
+        - Fn::ImportValue:
+            Fn::Sub: ${VpcStack}-PublicSubnet1
+        - Fn::ImportValue:
+            Fn::Sub: ${VpcStack}-PublicSubnet2
+      # Tags: 
+      #   - Tag
+      # Constraint failed for name, why? fix later
+      #VpcConnectorName: "${AWS::StackName}-vpc-connector"
+      VpcConnectorName: vpc-connector
+
   # AppRunnerInstanceRole:
   #   Type: AWS::IAM::Role
   #   Properties:
@@ -68,7 +90,6 @@ Resources:
 
 
 
-
   Service:
     Metadata:
       'aws:apprunner:description': 'hello-app-runner example service'
@@ -78,20 +99,20 @@ Resources:
       SourceConfiguration:
         AuthenticationConfiguration:
           AccessRoleArn: !GetAtt ServiceAccessRole.Arn
-        AutoDeploymentsEnabled: true  # true works for source code or images
+        AutoDeploymentsEnabled: true  # true works for source code; images too??
         ImageRepository:
           ImageConfiguration:
             Port: 8000
           ImageIdentifier: 355255540862.dkr.ecr.us-east-1.amazonaws.com/wagrun:latest
           ImageRepositoryType: ECR
+      NetworkConfiguration:      # Needed for RDS in VPC
+        EgressConfiguration:
+          EgressType: VPC
+          VpcConnectorArn: !GetAtt VpcConnector.VpcConnectorArn
       # AutoScalingConfigurationArn: str
       # EncryptionConfigureation: object
       # HealthCheckConfiguration: obj
       # InstanceConfiguration: obj -- InstanceRoleArn: for IAM Role to ... talk to RDS? ECR?
-      # NetworkConfiguration: obj
-      #   EgressCconfiguration:
-      #     EgressType: VPC
-      #     VpcConnectorArn: ...
       # ObservabilityConfiguration: 
       # Tags
 
