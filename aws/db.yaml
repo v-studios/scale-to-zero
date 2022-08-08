@@ -1,0 +1,43 @@
+Parameters:
+  DBUser:
+    Type: String
+    Default: dbuser
+  DBPassword:
+    Type: String
+    Default: ChangeMe
+  DBSubnetGroupName: 
+    Type: String
+    Default: db-serverless-v1
+  VpcStack:
+    Type: String
+    Default: wagtail-apprunner-vpc
+
+Resources:
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet for Database
+      DBSubnetGroupName: !Ref DBSubnetGroupName
+      SubnetIds:
+        - Fn::ImportValue:
+            Fn::Sub: ${VpcStack}-PublicSubnet1
+        - Fn::ImportValue:
+            Fn::Sub: ${VpcStack}-PublicSubnet2
+  Database:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      DBSubnetGroupName: !Ref DBSubnetGroupName
+      MasterUsername: !Ref DBUser
+      MasterUserPassword: !Ref DBPassword
+      Engine: aurora-postgresql
+      EngineMode: serverless             # only v1 at this time
+      # Console says Serverless v1 maxed at 11.13
+      # aws rds describe-db-engine-versions --engine aurora-postgresql --query "DBEngineVersions[].EngineVersion" -- highest is 14.3
+      EngineVersion: 11.13
+      ScalingConfiguration:
+        AutoPause: true
+        MaxCapacity: 4
+        MinCapacity: 2
+        SecondsUntilAutoPause: 300
+      # Ref: name of cluster
+      # GetAtt: Endpoint.Address, Endpoint.Port, 
