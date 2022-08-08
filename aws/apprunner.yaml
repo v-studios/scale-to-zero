@@ -1,0 +1,101 @@
+# Create the App Runner service
+# aws cloudformation deploy --template-file apprunner.yaml  --stack-name wagrun --capabilities CAPABILITY_NAMED_IAM
+
+# Took ideas from:
+# * https://www.youtube.com/watch?v=ABvx7radhw4
+# * https://github.com/aws-samples/aws-apprunner-netcore/blob/main/config/net-core-app-infra.yaml
+
+
+Description: Create app runner service, pulling image from Private ECR
+
+Parameters:
+  ServiceName:
+    Type: String
+    Default: wagrun
+    Description: Name for your App Runner service
+
+Resources:
+
+  ServiceAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ServiceName}-service-access-role
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [build.apprunner.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: AmazonAppRunnerExecutionRolePolicy
+          PolicyDocument:
+            Statement:
+            - Effect: Allow
+              Action:
+                - 'ecr:GetAuthorizationToken'
+                - 'ecr:BatchCheckLayerAvailability'
+                - 'ecr:GetDownloadUrlForLayer'
+                - 'ecr:BatchGetImage'
+                - 'logs:CreateLogStream'
+                - 'logs:PutLogEvents'
+              Resource: '*'
+
+  # AppRunnerInstanceRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     RoleName: !Sub ${AppStackName}-instance-role
+  #     ManagedPolicyArns:
+  #       - arn:aws:iam::aws:policy/AmazonRDSFullAccess 
+  #       - arn:aws:iam::aws:policy/AmazonSSMFullAccess 
+  #     AssumeRolePolicyDocument:
+  #       Statement:
+  #       - Effect: Allow
+  #         Principal:
+  #           Service: [tasks.apprunner.amazonaws.com]
+  #         Action: ['sts:AssumeRole'] 
+  #     Path: /
+  #     Policies:
+  #     - PolicyName: net-core-instance-role-policy
+  #       PolicyDocument:
+  #         Statement:
+  #         - Effect: Allow
+  #           Action:
+  #             - 's3:get*'
+  #           Resource: '*'
+
+
+
+
+  Service:
+    Metadata:
+      'aws:apprunner:description': 'hello-app-runner example service'
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName: !Ref ServiceName
+      SourceConfiguration:
+        AuthenticationConfiguration:
+          AccessRoleArn: !GetAtt ServiceAccessRole.Arn
+        AutoDeploymentsEnabled: true  # true works for source code or images
+        ImageRepository:
+          ImageConfiguration:
+            Port: 8000
+          ImageIdentifier: 355255540862.dkr.ecr.us-east-1.amazonaws.com/wagrun:latest
+          ImageRepositoryType: ECR
+      # AutoScalingConfigurationArn: str
+      # EncryptionConfigureation: object
+      # HealthCheckConfiguration: obj
+      # InstanceConfiguration: obj -- InstanceRoleArn: for IAM Role to ... talk to RDS? ECR?
+      # NetworkConfiguration: obj
+      #   EgressCconfiguration:
+      #     EgressType: VPC
+      #     VpcConnectorArn: ...
+      # ObservabilityConfiguration: 
+      # Tags
+
+Outputs:
+  Url:
+    Description: The HTTP endpoint of the service
+    Value: !GetAtt Service.ServiceUrl

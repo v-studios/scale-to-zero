@@ -20,7 +20,7 @@ COPY --from=install /VENV /VENV
 COPY --from=install /app /app
 WORKDIR /app
 RUN ./manage.py migrate
-RUN DJANGO_SUPERUSER_PASSWORD=KILLME ./manage.py createsuperuser --noinput --username chris2 --email chris@v-studios.com
+RUN DJANGO_SUPERUSER_PASSWORD=KILLME ./manage.py createsuperuser --noinput --username chris --email chris@v-studios.com
 
 
 FROM ${PYTHON} AS run
