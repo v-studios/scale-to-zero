@@ -53,3 +53,17 @@ ecr_create: ecr_login
 #         }
 #     ]
 # }
+# Docs say we need this:
+# https://docs.aws.amazon.com/apprunner/latest/dg/security_iam_service-with-iam.html#security_iam_service-with-iam-roles-service.instance
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Effect": "Allow",
+#       "Principal": {
+#         "Service": "tasks.apprunner.amazonaws.com"
+#       },
+#       "Action": "sts:AssumeRole"
+#     }
+#   ]
+# }
