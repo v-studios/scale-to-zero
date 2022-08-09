@@ -5,17 +5,16 @@
 
 ---
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Create AWS ECR that will have application docker image for .NET WebApi that talks to Aurora.
+Description: Create AWS ECR that will have application docker image
 Parameters:
-  AppStackName:
-    Description: An Application name that will be prefixed to resource names
+  BaseName:
     Type: String
-    Default: net-core-stack    
+
 Resources:
   ECRRepository: 
     Type: AWS::ECR::Repository
     Properties: 
-      RepositoryName: !Sub ${AppStackName}-repo
+      RepositoryName: !Sub ${BaseName}
       RepositoryPolicyText: 
         Version: "2012-10-17"
         Statement: 

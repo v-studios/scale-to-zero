@@ -10,21 +10,16 @@ Description: This template deploys a VPC, with a pair of public
   VPC.
 
 Parameters:
-  EnvironmentName:
-    Description: An environment name that is prefixed to resource names
+  BaseName:
     Type: String
-    Default: dev
-
   VpcCIDR:
     Description: Please enter the IP range (CIDR notation) for this VPC
     Type: String
     Default: 10.192.0.0/16
-
   PublicSubnet1CIDR:
     Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
     Type: String
     Default: 10.192.10.0/24
-
   PublicSubnet2CIDR:
     Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
     Type: String
@@ -39,14 +34,14 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: !Ref EnvironmentName
+          Value: !Ref BaseName
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: !Ref EnvironmentName
+          Value: !Ref BaseName
 
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -63,7 +58,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+          Value: !Sub ${BaseName} Public Subnet (AZ1)
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
@@ -74,7 +69,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName} Public Subnet (AZ2)
+          Value: !Sub ${BaseName} Public Subnet (AZ2)
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -82,7 +77,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName} Public Routes
+          Value: !Sub ${BaseName} Public Routes
 
   DefaultPublicRoute:
     Type: AWS::EC2::Route
@@ -104,19 +99,19 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet2
 
-  NoIngressSecurityGroup:
+  SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: "no-ingress-sg"
+      GroupName: !Sub "${BaseName}-sg"
       GroupDescription: "Security group with no ingress rule"
       VpcId: !Ref VPC
 
 Outputs:
-  VPC:
+  VpcId:
     Description: A reference to the created VPC
     Value: !Ref VPC
     Export:
-      Name: !Sub "${AWS::StackName}-VPC"
+      Name: !Sub "${AWS::StackName}-VpcId" # AWS::StackName or BaseName?
 
   PublicSubnets:
     Description: A list of the public subnets
@@ -134,8 +129,8 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-PublicSubnet2"
 
-  NoIngressSecurityGroup:
-    Description: Security group with no ingress rule
-    Value: !Ref NoIngressSecurityGroup
+  SecurityGroup:
+    Description: Security group with no rules
+    Value: !Ref SecurityGroup
     Export:
-      Name: !Sub "${AWS::StackName}-NoIngressSecurityGroup"
+      Name: !Sub "${AWS::StackName}-SecurityGroup"

@@ -1,33 +1,36 @@
 Parameters:
+  BaseName:
+    Type: String
+  PublicSubnet1:
+    Type: String
+  PublicSubnet2:
+    Type: String
   DBUser:
     Type: String
     Default: dbuser
   DBPassword:
     Type: String
     Default: ChangeMe
-  DBSubnetGroupName: 
-    Type: String
-    Default: db-serverless-v1
-  VpcStack:
-    Type: String
-    Default: wagtail-apprunner-vpc
 
 Resources:
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: Subnet for Database
-      DBSubnetGroupName: !Ref DBSubnetGroupName
+      DBSubnetGroupName: !Sub "${BaseName}-db-subnet-group"
       SubnetIds:
-        - Fn::ImportValue:
-            Fn::Sub: ${VpcStack}-PublicSubnet1
-        - Fn::ImportValue:
-            Fn::Sub: ${VpcStack}-PublicSubnet2
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      # SubnetIds:
+      #   - Fn::ImportValue:
+      #       Fn::Sub: ${VpcStack}-PublicSubnet1
+      #   - Fn::ImportValue:
+      #       Fn::Sub: ${VpcStack}-PublicSubnet2
   Database:
     Type: AWS::RDS::DBCluster
     Properties:
-      DBSubnetGroupName: !Ref DBSubnetGroupName
-      MasterUsername: !Ref DBUser
+      DBSubnetGroupName:  !Ref DBSubnetGroup
+      MasterUsername:     !Ref DBUser
       MasterUserPassword: !Ref DBPassword
       Engine: aurora-postgresql
       EngineMode: serverless             # only v1 at this time

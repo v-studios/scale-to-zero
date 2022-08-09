@@ -1,0 +1,43 @@
+# aws cloudformation deploy --template-file dev.yaml  --stack-name wagrun-dev --capabilities CAPABILITY_NAMED_IAM
+
+Parameters:
+  App:
+    Type: String
+    Default: wagrun2
+  Env:
+    Type: String
+    Default: dev
+  BaseName: 
+    Type: String
+    Default: wagrun-dev #!Sub "${App}-${Env}"
+
+Resources:
+  Vpc:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/vpc.yaml
+      Parameters:
+        BaseName: !Ref BaseName
+
+  Ecr:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/ecr.yaml
+      Parameters:
+        BaseName: !Ref BaseName
+
+  Db:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/db.yaml
+      Parameters:
+        BaseName:       !Ref BaseName
+        PublicSubnet1:  !GetAtt Vpc.Outputs.PublicSubnet1
+        PublicSubnet2:  !GetAtt Vpc.Outputs.PublicSubnet2
+
+  # AppRunner:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/db.yaml
+  #     Parameters:
+  #       BaseName: !Ref BaseName
