@@ -21,11 +21,6 @@ Resources:
       SubnetIds:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
-      # SubnetIds:
-      #   - Fn::ImportValue:
-      #       Fn::Sub: ${VpcStack}-PublicSubnet1
-      #   - Fn::ImportValue:
-      #       Fn::Sub: ${VpcStack}-PublicSubnet2
   Database:
     Type: AWS::RDS::DBCluster
     Properties:

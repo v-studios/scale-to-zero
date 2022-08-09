@@ -5,24 +5,26 @@
 # * https://www.youtube.com/watch?v=ABvx7radhw4
 # * https://github.com/aws-samples/aws-apprunner-netcore/blob/main/config/net-core-app-infra.yaml
 
-
 Description: Create app runner service, pulling image from Private ECR
 
 Parameters:
-  ServiceName:
+  BaseName:
     Type: String
-    Default: wagrun
-    Description: Name for your App Runner service
-  VpcStack:
+  PublicSubnet1:
     Type: String
-    Default: wagtail-apprunner-vpc
+  PublicSubnet2:
+    Type: String
+  SecurityGroup:
+    Type: String
+  RepositoryUri:
+    Type: String
 
 Resources:
 
   ServiceAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${ServiceName}-service-access-role
+      RoleName: !Sub ${BaseName}-service-access-role
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess
       AssumeRolePolicyDocument:
@@ -49,21 +51,39 @@ Resources:
   VpcConnector:                 # Needed to access RDS in VPC
     Type: AWS::AppRunner::VpcConnector
     Properties:
-      # default uses VPC default SG which allows all outbound
-      SecurityGroups:
-        - Fn::ImportValue:
-            Fn::Sub: ${VpcStack}-NoIngressSecurityGroup
+      SecurityGroups: # default uses VPC default SG which allows all outbound
+        - !Ref SecurityGroup
       Subnets:
-        # !Split [',' {'Fn::ImportValue': !Sub '${ParentVPCStack}-SubnetsPublic}] #??
-        - Fn::ImportValue:
-            Fn::Sub: ${VpcStack}-PublicSubnet1
-        - Fn::ImportValue:
-            Fn::Sub: ${VpcStack}-PublicSubnet2
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
       # Tags: 
       #   - Tag
-      # Constraint failed for name, why? fix later
-      #VpcConnectorName: "${AWS::StackName}-vpc-connector"
-      VpcConnectorName: vpc-connector
+      VpcConnectorName: !Sub ${BaseName}-vpc-connector
+
+  Service:
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName: !Sub ${BaseName}-apprunner
+      SourceConfiguration:
+        AuthenticationConfiguration:
+          AccessRoleArn: !GetAtt ServiceAccessRole.Arn
+        AutoDeploymentsEnabled: true  # true works for source code; images too??
+        ImageRepository:
+          ImageConfiguration:
+            Port: 8000
+          #ImageIdentifier: !Sub ${RepositoryUri}/${BaseName}:latest # TODO get from ecr.yml
+          ImageIdentifier: 355255540862.dkr.ecr.us-east-1.amazonaws.com/wagrun:latest # TODO get from ecr.yml
+          ImageRepositoryType: ECR
+      NetworkConfiguration:      # Needed for RDS in VPC
+        EgressConfiguration:
+          EgressType: VPC
+          VpcConnectorArn: !GetAtt VpcConnector.VpcConnectorArn
+      # AutoScalingConfigurationArn: str
+      # EncryptionConfigureation: object
+      # HealthCheckConfiguration: obj
+      # InstanceConfiguration: obj -- InstanceRoleArn: for IAM Role to ... talk to RDS? ECR?
+      # ObservabilityConfiguration: 
+      # Tags
 
   # AppRunnerInstanceRole:
   #   Type: AWS::IAM::Role
@@ -90,33 +110,9 @@ Resources:
 
 
 
-  Service:
-    Metadata:
-      'aws:apprunner:description': 'hello-app-runner example service'
-    Type: AWS::AppRunner::Service
-    Properties:
-      ServiceName: !Ref ServiceName
-      SourceConfiguration:
-        AuthenticationConfiguration:
-          AccessRoleArn: !GetAtt ServiceAccessRole.Arn
-        AutoDeploymentsEnabled: true  # true works for source code; images too??
-        ImageRepository:
-          ImageConfiguration:
-            Port: 8000
-          ImageIdentifier: 355255540862.dkr.ecr.us-east-1.amazonaws.com/wagrun:latest
-          ImageRepositoryType: ECR
-      NetworkConfiguration:      # Needed for RDS in VPC
-        EgressConfiguration:
-          EgressType: VPC
-          VpcConnectorArn: !GetAtt VpcConnector.VpcConnectorArn
-      # AutoScalingConfigurationArn: str
-      # EncryptionConfigureation: object
-      # HealthCheckConfiguration: obj
-      # InstanceConfiguration: obj -- InstanceRoleArn: for IAM Role to ... talk to RDS? ECR?
-      # ObservabilityConfiguration: 
-      # Tags
 
 Outputs:
   Url:
     Description: The HTTP endpoint of the service
     Value: !GetAtt Service.ServiceUrl
+

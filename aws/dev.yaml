@@ -35,9 +35,13 @@ Resources:
         PublicSubnet1:  !GetAtt Vpc.Outputs.PublicSubnet1
         PublicSubnet2:  !GetAtt Vpc.Outputs.PublicSubnet2
 
-  # AppRunner:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/db.yaml
-  #     Parameters:
-  #       BaseName: !Ref BaseName
+  AppRunner:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/apprunner.yaml
+      Parameters:
+        BaseName:       !Ref BaseName
+        PublicSubnet1:  !GetAtt Vpc.Outputs.PublicSubnet1
+        PublicSubnet2:  !GetAtt Vpc.Outputs.PublicSubnet2
+        SecurityGroup:  !GetAtt Vpc.Outputs.SecurityGroup
+        RepositoryUri:  !GetAtt Ecr.Outputs.RepositoryUri

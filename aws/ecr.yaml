@@ -25,4 +25,6 @@ Resources:
   
 Outputs:
   Arn:
-    Value: !GetAtt ECRRepository.Arn
+    Value: !GetAtt ECRRepository.Arn           # arn:aws:ecr:us-east-1:123456789012:repository/my-repository
+  RepositoryUri:
+    Value: !GetAtt ECRRepository.RepositoryUri # 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repository
