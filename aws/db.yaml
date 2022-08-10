@@ -1,6 +1,4 @@
 Parameters:
-  BaseName:
-    Type: String
   PublicSubnet1:
     Type: String
   PublicSubnet2:
@@ -17,7 +15,7 @@ Resources:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: Subnet for Database
-      DBSubnetGroupName: !Sub "${BaseName}-db-subnet-group"
+      DBSubnetGroupName: !Sub "${AWS::StackName}-db-subnet-group"
       SubnetIds:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
@@ -37,5 +35,11 @@ Resources:
         MaxCapacity: 4
         MinCapacity: 2
         SecondsUntilAutoPause: 300
-      # Ref: name of cluster
-      # GetAtt: Endpoint.Address, Endpoint.Port, 
+
+Outputs:
+  Address:
+    Value: !GetAtt Database.Endpoint.Address
+  Port:
+    Value: !GetAtt Database.Endpoint.Port
+  Name:
+    Value: !Ref    Database                    # name of cluster

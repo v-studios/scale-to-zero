@@ -10,18 +10,13 @@ Description: This template deploys a VPC, with a pair of public
   VPC.
 
 Parameters:
-  BaseName:
-    Type: String
   VpcCIDR:
-    Description: Please enter the IP range (CIDR notation) for this VPC
     Type: String
     Default: 10.192.0.0/16
   PublicSubnet1CIDR:
-    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
     Type: String
     Default: 10.192.10.0/24
   PublicSubnet2CIDR:
-    Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
     Type: String
     Default: 10.192.11.0/24
 
@@ -34,14 +29,14 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: !Ref BaseName
+          Value: !Ref AWS::StackName
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: !Ref BaseName
+          Value: !Ref AWS::StackName
 
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -58,7 +53,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub ${BaseName} Public Subnet (AZ1)
+          Value: !Sub ${AWS::StackName} Public Subnet (AZ1)
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
@@ -69,7 +64,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub ${BaseName} Public Subnet (AZ2)
+          Value: !Sub ${AWS::StackName} Public Subnet (AZ2)
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -77,7 +72,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub ${BaseName} Public Routes
+          Value: !Sub ${AWS::StackName} Public Routes
 
   DefaultPublicRoute:
     Type: AWS::EC2::Route
@@ -102,7 +97,7 @@ Resources:
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub "${BaseName}-sg"
+      GroupName: !Sub "${AWS::StackName}-sg"
       GroupDescription: "Security group with no ingress rule"
       VpcId: !Ref VPC
 
@@ -111,7 +106,7 @@ Outputs:
     Description: A reference to the created VPC
     Value: !Ref VPC
     Export:
-      Name: !Sub "${AWS::StackName}-VpcId" # AWS::StackName or BaseName?
+      Name: !Sub "${AWS::StackName}-VpcId"
 
   PublicSubnets:
     Description: A list of the public subnets
