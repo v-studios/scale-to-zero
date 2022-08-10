@@ -1,0 +1,42 @@
+# aws cloudformation deploy --template-file wagrun-dev.yaml  --stack-name wagrun-dev --capabilities CAPABILITY_NAMED_IAM
+
+# Do not create ECR here but externally so it can be used by all
+# environments: dev, qa, prod. This will avoid chicken versus egg
+# where CloudFormation creates ECR but then its Apprunner can't find
+# an image yet so it rolls everything back to zero.
+
+Parameters:
+  # BaseName and OpEnv are used to tag images in the repo, like .../wagrun:dev
+  BaseName:
+    Type: String
+    Default: wagrun
+  OpEnv:
+    Type: String
+    Default: dev
+
+
+
+Resources:
+  Vpc:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/vpc.yaml
+
+  Db:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/db.yaml
+      Parameters:
+        PublicSubnet1:  !GetAtt Vpc.Outputs.PublicSubnet1
+        PublicSubnet2:  !GetAtt Vpc.Outputs.PublicSubnet2
+
+  AppRunner:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/apprunner.yaml
+      Parameters:
+        BaseName:       !Ref BaseName
+        OpEnv:          !Ref OpEnv
+        PublicSubnet1:  !GetAtt Vpc.Outputs.PublicSubnet1
+        PublicSubnet2:  !GetAtt Vpc.Outputs.PublicSubnet2
+        SecurityGroup:  !GetAtt Vpc.Outputs.SecurityGroup

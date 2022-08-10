@@ -1,3 +1,6 @@
+# App Runner config file for automatic building upon commit
+# Doesn't work reliably yet, switch to using prebuilt containers.
+
 version: 1.0
 runtime: python3                # has python, pip, setuptools, wheel, virtualenv
 

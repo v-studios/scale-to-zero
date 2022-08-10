@@ -1,0 +1,45 @@
+Parameters:
+  PublicSubnet1:
+    Type: String
+  PublicSubnet2:
+    Type: String
+  DBUser:
+    Type: String
+    Default: dbuser
+  DBPassword:
+    Type: String
+    Default: ChangeMe
+
+Resources:
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet for Database
+      DBSubnetGroupName: !Sub "${AWS::StackName}-db-subnet-group"
+      SubnetIds:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+  Database:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      DBSubnetGroupName:  !Ref DBSubnetGroup
+      MasterUsername:     !Ref DBUser
+      MasterUserPassword: !Ref DBPassword
+      Engine: aurora-postgresql
+      EngineMode: serverless             # only v1 at this time
+      # Console says Serverless v1 maxed at 11.13
+      # aws rds describe-db-engine-versions --engine aurora-postgresql --query "DBEngineVersions[].EngineVersion" -- highest is 14.3
+      EngineVersion: 11.13
+      ScalingConfiguration:
+        AutoPause: true
+        MaxCapacity: 4
+        MinCapacity: 2
+        SecondsUntilAutoPause: 300
+
+Outputs:
+  Address:
+    Value: !GetAtt Database.Endpoint.Address
+  Port:
+    Value: !GetAtt Database.Endpoint.Port
+  Name:
+    Value: !Ref    Database                    # name of cluster

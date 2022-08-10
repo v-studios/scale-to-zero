@@ -203,3 +203,30 @@ VPC for RDS
 We'll need a VPC for RDS and it has to export its subnets and security
 groups so we can reference them in the AppRunner config. We do that
 with ``vpc.yaml``.
+
+CloudFormation Nested Stacks: chickens versus eggs
+==================================================
+
+The ``aws/`` directory has a ``dev.yml`` file which invokes the nested
+stacks for VPC, ECR, DB, AppRunner.
+
+The top-level ``Makefile`` builds and tags an image then uploads it to the ECR.
+
+But the CloudFormation will fail on AppRunner when it tries to pull
+and image that's not already there. So we have a chicken versus egg
+situation: The CF will fail without the ECR image (and tear down the
+entire suite of nested stacks, including expensive ones like DB). But
+if we first use ``Makefile`` to "manually" create the ECR and push an
+image, it will prevent the CloudFormation from running since a repo
+already exists with that name.
+
+Decision:
+
+The top-level makefile creates an ECR repo that ``wagrun`` which can
+have images with tags based on environment: ``:dev``, ``:qa``,
+``:prod``. We will have to ensure that the CloudFormation main
+environment-based stacks (e.g., ``dev.yaml``) specify the correct ECR,
+repo, and tag when it invoked ``apprunner.aws``.
+
+This allows us to build, tag, and push images independent of the AWS
+nested stacks -- for all environments.

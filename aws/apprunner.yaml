@@ -1,0 +1,117 @@
+# Create the App Runner service
+# aws cloudformation deploy --template-file apprunner.yaml  --stack-name wagrun --capabilities CAPABILITY_NAMED_IAM
+
+# Took ideas from:
+# * https://www.youtube.com/watch?v=ABvx7radhw4
+# * https://github.com/aws-samples/aws-apprunner-netcore/blob/main/config/net-core-app-infra.yaml
+
+Description: Create app runner service, pulling image from Private ECR
+
+Parameters:
+  BaseName:
+    Type: String                # wagrun
+  OpEnv:
+    Type: String                # dev, qa, prod
+  PublicSubnet1:
+    Type: String
+  PublicSubnet2:
+    Type: String
+  SecurityGroup:
+    Type: String
+
+Resources:
+
+  AccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${BaseName}-${OpEnv}-access-role
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [build.apprunner.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: AmazonAppRunnerExecutionRolePolicy
+          PolicyDocument:
+            Statement:
+            - Effect: Allow
+              Action:
+                - 'ecr:GetAuthorizationToken'
+                - 'ecr:BatchCheckLayerAvailability'
+                - 'ecr:GetDownloadUrlForLayer'
+                - 'ecr:BatchGetImage'
+                - 'logs:CreateLogStream'
+                - 'logs:PutLogEvents'
+              Resource: '*'     # TODO narrow it to our ECR name, and to logGroups/logStreams
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${BaseName}-${OpEnv}-instance-role
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonRDSFullAccess # talk to RDS Aurora Serverless v1
+        - arn:aws:iam::aws:policy/AmazonSSMFullAccess 
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [tasks.apprunner.amazonaws.com]
+          Action: ['sts:AssumeRole'] 
+      Path: /
+      Policies:
+      - PolicyName: net-core-instance-role-policy
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+              - 's3:Get*'       # media and assets
+              - 's3:PutObject*' # store uploaded media
+            Resource: '*'       # TODO we don't yet store assets/media in S3 but we will
+
+  VpcConnector:                 # Needed to access RDS in VPC
+    Type: AWS::AppRunner::VpcConnector
+    Properties:
+      SecurityGroups: # default uses VPC default SG which allows all outbound
+        - !Ref SecurityGroup
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      # Tags: 
+      #   - Tag
+      VpcConnectorName: !Sub ${BaseName}
+
+  Service:
+    Type: AWS::AppRunner::Service
+    Properties:
+      InstanceConfiguration:
+        InstanceRoleArn: !GetAtt InstanceRole.Arn
+      NetworkConfiguration:      # Needed for RDS in VPC
+        EgressConfiguration:
+          EgressType: VPC
+          VpcConnectorArn: !GetAtt VpcConnector.VpcConnectorArn
+      ServiceName: !Sub ${BaseName}-${OpEnv}
+      SourceConfiguration:
+        AuthenticationConfiguration:
+          AccessRoleArn: !GetAtt AccessRole.Arn
+        AutoDeploymentsEnabled: true  # true works for source code; images too??
+        ImageRepository:
+          ImageConfiguration:
+            Port: 8000
+          ImageIdentifier: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${BaseName}:${OpEnv}
+          #ImageIdentifier: 355255540862.dkr.ecr.us-east-1.amazonaws.com/wagrun:dev
+          ImageRepositoryType: ECR
+      # AutoScalingConfigurationArn: str
+      # EncryptionConfigureation: object
+      # HealthCheckConfiguration: obj
+      # ObservabilityConfiguration: 
+      # Tags
+
+Outputs:
+  Url:
+    Description: The HTTP endpoint of the service but we need HTTPS to access it
+    Value: !GetAtt Service.ServiceUrl
+
