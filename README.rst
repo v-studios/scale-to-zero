@@ -230,3 +230,16 @@ repo, and tag when it invoked ``apprunner.aws``.
 
 This allows us to build, tag, and push images independent of the AWS
 nested stacks -- for all environments.
+
+Make DATABASE_URL flexible
+==========================
+
+make build
+docker run -it --rm -p 8000:8000 wagrun:dev
+docker run -it --rm -p 8000:8000 -e DATABASE_URL="sqlite:////tmp/db.sqlite3" wagrun:dev
+DATABASE_URL="postgres://dbuser:ChangeMe@wagrun-dev-db-1zu57g3uqx51-database-ghv5kxp65q1z.cluster-cwdazoayirv4.us-east-1.rds.amazonaws.com:5432/wagrun"
+
+          -e DATABASE_HOST=${SQLDatabase.Endpoint.Address}
+          -e DATABASE_NAME=${DBName}
+          -e DATABASE_USER=${DBUser}
+          -e DATABASE_PASSWORD_SSM_KEY=${DBPasswordSSMKey}

@@ -3,12 +3,12 @@ Parameters:
     Type: String
   PublicSubnet2:
     Type: String
-  DBUser:
+  DatabaseName:
     Type: String
-    Default: dbuser
-  DBPassword:
+  DatabaseUser:
     Type: String
-    Default: ChangeMe
+  DatabasePassword:
+    Type: String
 
 Resources:
   DBSubnetGroup:
@@ -22,11 +22,13 @@ Resources:
   Database:
     Type: AWS::RDS::DBCluster
     Properties:
-      DBSubnetGroupName:  !Ref DBSubnetGroup
-      MasterUsername:     !Ref DBUser
-      MasterUserPassword: !Ref DBPassword
       Engine: aurora-postgresql
       EngineMode: serverless             # only v1 at this time
+      DatabaseName:        !Ref DatabaseName
+      DBClusterIdentifier: !Ref DatabaseName # default nested stack name is > 63 char PostgreSQL limit
+      DBSubnetGroupName:   !Ref DBSubnetGroup
+      MasterUsername:      !Ref DatabaseUser
+      MasterUserPassword:  !Ref DatabasePassword
       # Console says Serverless v1 maxed at 11.13
       # aws rds describe-db-engine-versions --engine aurora-postgresql --query "DBEngineVersions[].EngineVersion" -- highest is 14.3
       EngineVersion: 11.13
@@ -37,9 +39,9 @@ Resources:
         SecondsUntilAutoPause: 300
 
 Outputs:
-  Address:
+  Host:
     Value: !GetAtt Database.Endpoint.Address
   Port:
     Value: !GetAtt Database.Endpoint.Port
   Name:
-    Value: !Ref    Database                    # name of cluster
+    Value: !Ref    DatabaseName       # CF has no output for the DatabaseName

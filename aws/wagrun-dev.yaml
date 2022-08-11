@@ -13,7 +13,12 @@ Parameters:
   OpEnv:
     Type: String
     Default: dev
-
+  DatabaseUser:
+    Type: String
+    Default: dbuser
+  DatabasePassword:
+    Type: String
+    Default: ChangeMe
 
 
 Resources:
@@ -27,16 +32,29 @@ Resources:
     Properties: 
       TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/db.yaml
       Parameters:
-        PublicSubnet1:  !GetAtt Vpc.Outputs.PublicSubnet1
-        PublicSubnet2:  !GetAtt Vpc.Outputs.PublicSubnet2
+        PublicSubnet1:    !GetAtt Vpc.Outputs.PublicSubnet1
+        PublicSubnet2:    !GetAtt Vpc.Outputs.PublicSubnet2
+        DatabaseName:     !Sub ${BaseName}${OpEnv} # only alphanumerics, no dashes
+        DatabaseUser:     !Ref DatabaseUser
+        DatabasePassword: !Ref DatabasePassword
+  # The DJANGO_URL handler seems broken, I give DJANGO_URL
+  # database_url='postgres://dbuser@ChangeMe/wagrundev.cluster-cwdazoayirv4.us-east-1.rds.amazonaws.com:5432/wagrundev'
+
 
   AppRunner:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/apprunner.yaml
       Parameters:
-        BaseName:       !Ref BaseName
-        OpEnv:          !Ref OpEnv
-        PublicSubnet1:  !GetAtt Vpc.Outputs.PublicSubnet1
-        PublicSubnet2:  !GetAtt Vpc.Outputs.PublicSubnet2
-        SecurityGroup:  !GetAtt Vpc.Outputs.SecurityGroup
+        BaseName:         !Ref BaseName
+        OpEnv:            !Ref OpEnv
+        PublicSubnet1:    !GetAtt Vpc.Outputs.PublicSubnet1
+        PublicSubnet2:    !GetAtt Vpc.Outputs.PublicSubnet2
+        SecurityGroup:    !GetAtt Vpc.Outputs.SecurityGroup
+        # This doesn't seem to get parsed properly, causing Django to say DB Name is 73 chars, whole string length
+        #DatabaseUrl:     !Sub "postgres://dbuser@ChangeMe/${Db.Outputs.Address}:${Db.Outputs.Port}/${Db.Outputs.Name}"
+        DatabaseHost:     !GetAtt Db.Outputs.Host
+        DatabasePort:     !GetAtt Db.Outputs.Port
+        DatabaseName:     !GetAtt Db.Outputs.Name
+        DatabaseUser:     !Ref DatabaseUser
+        DatabasePassword: !Ref DatabasePassword
