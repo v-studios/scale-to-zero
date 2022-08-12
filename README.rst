@@ -243,3 +243,38 @@ DATABASE_URL="postgres://dbuser:ChangeMe@wagrun-dev-db-1zu57g3uqx51-database-ghv
           -e DATABASE_NAME=${DBName}
           -e DATABASE_USER=${DBUser}
           -e DATABASE_PASSWORD_SSM_KEY=${DBPasswordSSMKey}
+
+Connect AppRunner to RDS in VPC
+===============================
+
+I have 2 public subnets in the VPC, and put AppRunner and RDS there.
+AR was not able to connect to the DB. I added a marker SG to AR's VPC Connector, and
+added an SG on the DB that allows the AR SG in; still cannot seem to
+connect.
+
+https://docs.aws.amazon.com/apprunner/latest/dg/network-vpc.html
+https://aws.amazon.com/blogs/aws/new-for-app-runner-vpc-support/
+
+I've launched an Ubuntu EC2 into a public subnet in the VPC, added the AR SG to it, and am able to access the DB::
+
+  $ psql -h wagrundev.cluster-cwdazoayirv4.us-east-1.rds.amazonaws.com -U dbuser  -d wagrundev
+  Password for user dbuser:
+  psql (14.3 (Ubuntu 14.3-0ubuntu0.22.04.1), server 11.13)
+  wagrundev=> \dt
+  Did not find any relations.
+  wagrundev=>
+
+However, the connection seemed to timeout at first.
+Now that I'm connected try to force a relaunch of Django with the DEPLOY button.
+TODO: See the OPTIONS.timeout
+
+In the EC2, I hit ``\dt`` and watched as wagtail tables were created!
+
+I go to the app's link and edit the home page title which is displayed in the browser title header. It shows up there.
+
+Back on EC2 I query the DB to ensure it stuck::
+
+  ...
+  3 | 00010001 |     2 |        0 | Home (edited) | home | t    | f                       | /home/   |           | f             |                    |            |           | f       |               2 |          | f      | 2022-08-12 20:32:27.371235+00 | 2022-08-12 20:32:27.442296+00 |                2 | 2022-08-12 20:32:27.442296+00 | Home (edited) |           |              | a4fd16b4-8098-418f-bcfd-dec1db4df038 |         1 |            
+
+Notice ``Home (edited)`` twice above. Hurray.
