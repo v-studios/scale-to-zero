@@ -90,7 +90,6 @@ Resources:
     Properties:
       SecurityGroups: # default uses VPC default SG which allows all outbound
         - !Ref SecurityGroup
-        - sg-0b6f7c727d7ead6f1  # something to make it different than wagrun2; nuke wagrun2 then redeploy without this line
       Subnets:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
