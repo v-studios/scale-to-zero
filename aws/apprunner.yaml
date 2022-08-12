@@ -18,6 +18,19 @@ Parameters:
     Type: String
   SecurityGroup:
     Type: String
+  # DatabaseUrl:
+  #   Type: String
+  DatabaseHost:
+    Type: String
+  DatabasePort:
+    Type: String
+  DatabaseName:
+    Type: String
+  DatabaseUser:
+    Type: String
+  DatabasePassword:
+    Type: String
+
 
 Resources:
 
@@ -80,8 +93,8 @@ Resources:
       Subnets:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
-      # Tags: 
-      #   - Tag
+      # 1. You cannot create the same-named connector again.
+      # 2. If you create a new connector with same SGs it will also fail!
       VpcConnectorName: !Sub ${BaseName}
 
   Service:
@@ -97,10 +110,23 @@ Resources:
       SourceConfiguration:
         AuthenticationConfiguration:
           AccessRoleArn: !GetAtt AccessRole.Arn
-        AutoDeploymentsEnabled: true  # true works for source code; images too??
+        AutoDeploymentsEnabled: true  # pulls new images from ECR
         ImageRepository:
           ImageConfiguration:
             Port: 8000
+            RuntimeEnvironmentVariables:
+              # - Name: DATABASE_URL
+              #   Value: !Ref DatabaseUrl
+              - Name: DATABASE_HOST
+                Value: !Ref DatabaseHost
+              - Name: DATABASE_PORT
+                Value: !Ref DatabasePort
+              - Name: DATABASE_NAME
+                Value: !Ref DatabaseName
+              - Name: DATABASE_USER
+                Value: !Ref DatabaseUser
+              - Name: DATABASE_PASSWORD
+                Value: !Ref DatabasePassword
           ImageIdentifier: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${BaseName}:${OpEnv}
           #ImageIdentifier: 355255540862.dkr.ecr.us-east-1.amazonaws.com/wagrun:dev
           ImageRepositoryType: ECR

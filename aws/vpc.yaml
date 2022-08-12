@@ -94,11 +94,23 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet2
 
-  SecurityGroup:
+  SecurityGroupAppRunner:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub "${AWS::StackName}-sg"
-      GroupDescription: "Security group with no ingress rule"
+      GroupName: !Sub "${AWS::StackName}-apprunner-sg"
+      GroupDescription: "Security group marking the apprunner instance"
+      VpcId: !Ref VPC
+
+  SecurityGroupDb:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${AWS::StackName}-db-sg"
+      GroupDescription: "Security group on DB allowing apprunner access"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          SourceSecurityGroupId: !GetAtt SecurityGroupAppRunner.GroupId
+          FromPort: 5432
+          ToPort: 5432
       VpcId: !Ref VPC
 
 Outputs:
@@ -124,8 +136,14 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-PublicSubnet2"
 
-  SecurityGroup:
-    Description: Security group with no rules
-    Value: !Ref SecurityGroup
+  SecurityGroupAppRunner:
+    Description: Security group to be applied to mark AppRunnerwith
+    Value: !Ref SecurityGroupAppRunner
     Export:
-      Name: !Sub "${AWS::StackName}-SecurityGroup"
+      Name: !Sub "${AWS::StackName}-SecurityGroupAppRunner"
+
+  SecurityGroupDb:
+    Description: Security group to be applied to DB to allow AppRunner access
+    Value: !Ref SecurityGroupDb
+    Export:
+      Name: !Sub "${AWS::StackName}-SecurityGroupDb"
