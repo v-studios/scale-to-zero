@@ -93,9 +93,7 @@ Resources:
       Subnets:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
-      # Tags: 
-      #   - Tag
-      VpcConnectorName: !Sub ${BaseName}
+      VpcConnectorName: !Sub ${BaseName}2 # when creating again, complained it already existed
 
   Service:
     Type: AWS::AppRunner::Service
@@ -110,8 +108,7 @@ Resources:
       SourceConfiguration:
         AuthenticationConfiguration:
           AccessRoleArn: !GetAtt AccessRole.Arn
-        # Default: App Runner sets to true ... a source image using a same-account ECR repository
-        AutoDeploymentsEnabled: true  # true works for source code; images too??
+        AutoDeploymentsEnabled: true  # pulls new images from ECR
         ImageRepository:
           ImageConfiguration:
             Port: 8000

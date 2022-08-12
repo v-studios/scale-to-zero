@@ -13,13 +13,6 @@ Parameters:
   OpEnv:
     Type: String
     Default: dev
-  DatabaseUser:
-    Type: String
-    Default: dbuser
-  DatabasePassword:
-    Type: String
-    Default: ChangeMe
-
 
 Resources:
   Vpc:
@@ -32,14 +25,10 @@ Resources:
     Properties: 
       TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/db.yaml
       Parameters:
-        PublicSubnet1:    !GetAtt Vpc.Outputs.PublicSubnet1
-        PublicSubnet2:    !GetAtt Vpc.Outputs.PublicSubnet2
-        DatabaseName:     !Sub ${BaseName}${OpEnv} # only alphanumerics, no dashes
-        DatabaseUser:     !Ref DatabaseUser
-        DatabasePassword: !Ref DatabasePassword
-  # The DJANGO_URL handler seems broken, I give DJANGO_URL
-  # database_url='postgres://dbuser@ChangeMe/wagrundev.cluster-cwdazoayirv4.us-east-1.rds.amazonaws.com:5432/wagrundev'
-
+        PublicSubnet1:  !GetAtt Vpc.Outputs.PublicSubnet1
+        PublicSubnet2:  !GetAtt Vpc.Outputs.PublicSubnet2
+        SecurityGroup:  !GetAtt Vpc.Outputs.SecurityGroupDb
+        DatabaseName:   !Sub ${BaseName}${OpEnv} # only alphanumerics, no dashes
 
   AppRunner:
     Type: AWS::CloudFormation::Stack
@@ -50,11 +39,11 @@ Resources:
         OpEnv:            !Ref OpEnv
         PublicSubnet1:    !GetAtt Vpc.Outputs.PublicSubnet1
         PublicSubnet2:    !GetAtt Vpc.Outputs.PublicSubnet2
-        SecurityGroup:    !GetAtt Vpc.Outputs.SecurityGroup
-        # This doesn't seem to get parsed properly, causing Django to say DB Name is 73 chars, whole string length
-        #DatabaseUrl:     !Sub "postgres://dbuser@ChangeMe/${Db.Outputs.Address}:${Db.Outputs.Port}/${Db.Outputs.Name}"
+        SecurityGroup:    !GetAtt Vpc.Outputs.SecurityGroupAppRunner
         DatabaseHost:     !GetAtt Db.Outputs.Host
         DatabasePort:     !GetAtt Db.Outputs.Port
         DatabaseName:     !GetAtt Db.Outputs.Name
-        DatabaseUser:     !Ref DatabaseUser
-        DatabasePassword: !Ref DatabasePassword
+        DatabaseUser:     !GetAtt Db.Outputs.DatabaseUser
+        DatabasePassword: !GetAtt Db.Outputs.DatabasePassword
+        # This doesn't seem to get parsed properly, causing Django to say DB Name is 73 chars, whole string length
+        #DatabaseUrl: !Sub "postgres://dbuser@ChangeMe/${Db.Outputs.Address}:${Db.Outputs.Port}/${Db.Outputs.Name}"
