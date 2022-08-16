@@ -1,0 +1,49 @@
+# aws cloudformation deploy --template-file wagrun-dev.yaml  --stack-name wagrun-dev --capabilities CAPABILITY_NAMED_IAM
+
+# Do not create ECR here but externally so it can be used by all
+# environments: dev, qa, prod. This will avoid chicken versus egg
+# where CloudFormation creates ECR but then its Apprunner can't find
+# an image yet so it rolls everything back to zero.
+
+Parameters:
+  # BaseName and OpEnv are used to tag images in the repo, like .../wagrun:dev
+  BaseName:
+    Type: String
+    Default: wagrun
+  OpEnv:
+    Type: String
+    Default: dev
+
+Resources:
+  Vpc:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/vpc.yaml
+
+  Db:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/db.yaml
+      Parameters:
+        PublicSubnet1:  !GetAtt Vpc.Outputs.PublicSubnet1
+        PublicSubnet2:  !GetAtt Vpc.Outputs.PublicSubnet2
+        SecurityGroup:  !GetAtt Vpc.Outputs.SecurityGroupDb
+        DatabaseName:   !Sub ${BaseName}${OpEnv} # only alphanumerics, no dashes
+
+  AppRunner:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/apprunner.yaml
+      Parameters:
+        BaseName:         !Ref BaseName
+        OpEnv:            !Ref OpEnv
+        PublicSubnet1:    !GetAtt Vpc.Outputs.PublicSubnet1
+        PublicSubnet2:    !GetAtt Vpc.Outputs.PublicSubnet2
+        SecurityGroup:    !GetAtt Vpc.Outputs.SecurityGroupAppRunner
+        DatabaseHost:     !GetAtt Db.Outputs.Host
+        DatabasePort:     !GetAtt Db.Outputs.Port
+        DatabaseName:     !GetAtt Db.Outputs.Name
+        DatabaseUser:     !GetAtt Db.Outputs.DatabaseUser
+        DatabasePassword: !GetAtt Db.Outputs.DatabasePassword
+        # This doesn't seem to get parsed properly, causing Django to say DB Name is 73 chars, whole string length
+        #DatabaseUrl: !Sub "postgres://dbuser@ChangeMe/${Db.Outputs.Address}:${Db.Outputs.Port}/${Db.Outputs.Name}"

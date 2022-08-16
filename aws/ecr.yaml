@@ -1,0 +1,38 @@
+# https://github.com/aws-samples/aws-apprunner-netcore/blob/main/config/net-core-app-ecr.yaml
+## Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved
+##
+### SPDX-License-Identifier: MIT-0
+
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create AWS ECR that will have application docker image
+
+Parameters:
+  BaseName: # we want 'pretty' name for pushing images to ECR in ../Makefile
+    Type: String
+
+Resources:
+  ECRRepository: 
+    Type: AWS::ECR::Repository
+    Properties: 
+      # RepositoryName: !Ref AWS::StackName
+      #   "Model validation failed (#/RepositoryName: failed validation constraint for keyword [pattern])"
+      # Appears to be eval to: MainStackName-SubStackName-RandomSuffix  (wagrun-dev-Ecr-1NRXBOQR524MB)
+      # If we omit, it names like: wagrun-dev-ecr-bt9ayjyibtdi-ecrrepository-jmbkkceigfcc
+      # But we want something simple we can refer to for all environments in aws/apprunner.yaml, like `wagrun`.
+      RepositoryName: !Ref BaseName
+      RepositoryPolicyText: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: "sts:AssumeRole" 
+  
+Outputs:
+  Arn:
+    Value: !GetAtt ECRRepository.Arn           # arn:aws:ecr:us-east-1:123456789012:repository/my-repository
+  RepositoryUri:
+    Value: !GetAtt ECRRepository.RepositoryUri # 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repository
+  DebugStackName: 
+    Value: !Ref AWS::StackName  # wagrun-dev-Ecr-1NRXBOQR524MB
