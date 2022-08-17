@@ -336,3 +336,39 @@ resilience.
 
 Just update the ``vpc.yaml`` CloudFormation to create another subnet
 and output it for consumption by the other sub-stacks.
+
+Custom DNS domain
+-----------------
+
+The AWS WebUI allows you to map a custom DNS domain to your App Runner
+service, but it's not available yet in CloudFormation.
+
+Database migration as a singleton
+---------------------------------
+
+In TTT2's Prod environment we launch 2 EC2s for redundancy (if one
+dies, the other will handle traffic so users experience no outage).
+But when both booted for the first time from CloudFormation and ran
+the Django migration, one of the two failed because the other had
+already started seconds before. This caused the entire CloudFormation
+deploy to roll-back. We had never seen this in Dev or QA, because we
+only run one EC2 there. We had to do some complex work to wait for
+CloudFormation to complete, query to find the newest instance, then
+use AWS Systems Manager "Run Command" feature to send the
+``./manage.py migrate`` to its Docker container.
+
+AWS App Runner abstracts the EC2s away, so I don't see an easy way to
+remotely run a one-off command in one of its containers. The `CLI
+commands
+<https://docs.aws.amazon.com/cli/latest/reference/apprunner/index.html>`_
+don't have anything useful. AWS Systems Manager does not seem to apply
+to App Runner.
+
+Could we set up a separate, parallel App Runner service that uses the
+same image, but has a different Docker ``RUN`` command that just runs
+the migration, with the newest code and models in the image? How would
+we end the service? with AWS CLI commands?
+
+If we were doing this in Fargate, we'd use a short-lived "task" to do
+this. But we're hoping to avoid the hassle of Fargate by using App
+Runner.
