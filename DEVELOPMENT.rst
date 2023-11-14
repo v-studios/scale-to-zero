@@ -102,3 +102,14 @@ In this case, the repo is called ``scale0`` and the image tag is
 ``dev``. The repo is created outside of CloudFormation to prevent
 stack roll-back with chicken-n-egg repo and image creation.
 
+After getting DB upgraded but low enough for Aurora Serverless v1,
+redeployed infra and it comes up but has Origin check problem when I try and login::
+
+    Origin checking failed - https://ykcgyztfmf.eu-west-3.awsapprunner.com does not match any trusted origins.
+
+Redeploy image to ECR with make ecr_push.
+
+It looks like the service noticed and it's upgrading::
+
+  Status: Operation in progress
+  

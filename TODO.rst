@@ -132,6 +132,33 @@ for the web, https://ykcgyztfmf.eu-west-3.awsapprunner.com/, I get::
    '/usr/local/lib/python3.12/lib-dynload',
    '/VENV/lib/python3.12/site-packages']
 
+On the DB Engine Fersions tab, it shows Serverless v1 only offers up to 13.9:
+https://eu-west-3.console.aws.amazon.com/rds/home?region=eu-west-3#launch-dbinstance:;isHermesCreate=true
+
+Updating with 13.9 loooking good so far, config page shows::
+
+  Autoscaling timeout
+  5 minutes
+  Pause compute capacity after consecutive minutes of inactivity
+  5 minutes
+
+Finally came back, but when I connect to the URL I get a trust problem::
+
+      Origin checking failed - https://ykcgyztfmf.eu-west-3.awsapprunner.com does not match any trusted origins.
+
+So edit the dev.py to add it::
+
+  CSRF_TRUSTED_ORIGINS=[
+    'https://*.us-east-1.awsapprunner.com',
+    'https://*.eu-west-3.awsapprunner.com',
+  ]
+
+SOON
+====
+
+Provide S3 for media (images/documents) presistence.
+
+
 LATER
 =====
 
