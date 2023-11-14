@@ -1,13 +1,11 @@
-# Based on, but removing PrivateSubnets and NATGW to save cost.
+# Based on, but removing PrivateSubnets and NATGW to save cost:
 # https://docs.aws.amazon.com/codebuild/latest/userguide/cloudformation-vpc-template.html
-#
-# aws cloudformation deploy --template-file vpc.yaml --stack-name wagtail-apprunner-vpc
 
 Description: This template deploys a VPC, with a pair of public
   subnets spread across two Availability Zones. It deploys an internet
   gateway, with a default route on the public subnets. It creates a
-  no-ingres security group we can reference for AppRunner to reach the
-  VPC.
+  no-ingres security group which we can reference for AppRunner to
+  reach the VPC.
 
 Parameters:
   VpcCIDR:

@@ -17,9 +17,9 @@ Resources:
     Properties: 
       # RepositoryName: !Ref AWS::StackName
       #   "Model validation failed (#/RepositoryName: failed validation constraint for keyword [pattern])"
-      # Appears to be eval to: MainStackName-SubStackName-RandomSuffix  (wagrun-dev-Ecr-1NRXBOQR524MB)
-      # If we omit, it names like: wagrun-dev-ecr-bt9ayjyibtdi-ecrrepository-jmbkkceigfcc
-      # But we want something simple we can refer to for all environments in aws/apprunner.yaml, like `wagrun`.
+      # Appears to be eval to: MainStackName-SubStackName-RandomSuffix  (scale0-dev-Ecr-1NRXBOQR524MB)
+      # If we omit, it names like: scale0-dev-ecr-bt9ayjyibtdi-ecrrepository-jmbkkceigfcc
+      # But we want something simple we can refer to for all environments in aws/apprunner.yaml, like `scale0`.
       RepositoryName: !Ref BaseName
       RepositoryPolicyText: 
         Version: "2012-10-17"
