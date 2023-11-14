@@ -18,8 +18,8 @@ Here, we deploy a stock Wagtail CMS with a PostgreSQL DB. See:
   <https://www.youtube.com/watch?v=ABvx7radhw4>`_
 * AWS App Runner `FAQs <https://aws.amazon.com/apprunner/faqs/>`_
 
-Unfortunately, App Runner it is NOT FedRAMPed at this time, so we
-won't be able to use it for NASA yet.
+[As of 2023-11-14, App Runner was NOT listed as FedRAMP certified, so
+we are not able to us it for our NASA projects yet.]
 
 Gave Up on Source Code Triggers
 ===============================
