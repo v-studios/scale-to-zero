@@ -13,7 +13,10 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 
 # Fix to allow App Runner origins to submit forms
-CSRF_TRUSTED_ORIGINS=['https://*.us-east-1.awsapprunner.com']
+CSRF_TRUSTED_ORIGINS=[
+    'https://*.us-east-1.awsapprunner.com',
+    'https://*.eu-west-3.awsapprunner.com',
+]
 
 # If DATABASE_URL is defined, configure from that:
 #    DATABASE_URL="sqlite:////tmp/db.sqlite3"

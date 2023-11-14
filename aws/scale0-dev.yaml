@@ -1,4 +1,4 @@
-# aws cloudformation deploy --template-file wagrun-dev.yaml  --stack-name wagrun-dev --capabilities CAPABILITY_NAMED_IAM
+# aws cloudformation deploy --template-file scale0-dev.yaml --stack-name scale0-dev --capabilities CAPABILITY_NAMED_IAM
 
 # Do not create ECR here but externally so it can be used by all
 # environments: dev, qa, prod. This will avoid chicken versus egg
@@ -9,21 +9,26 @@ Parameters:
   # BaseName and OpEnv are used to tag images in the repo, like .../wagrun:dev
   BaseName:
     Type: String
-    Default: wagrun
+    Default: scale0
   OpEnv:
     Type: String
     Default: dev
+  CfBucket:
+    Type: String
+    Default: DEFINE WITH PARAMETER
+
+# TODO make s3 a variable
 
 Resources:
   Vpc:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/vpc.yaml
+      TemplateURL: !Sub https://s3.amazonaws.com/${CfBucket}/vpc.yaml
 
   Db:
     Type: AWS::CloudFormation::Stack
     Properties: 
-      TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/db.yaml
+      TemplateURL: !Sub https://s3.amazonaws.com/${CfBucket}/db.yaml
       Parameters:
         PublicSubnet1:  !GetAtt Vpc.Outputs.PublicSubnet1
         PublicSubnet2:  !GetAtt Vpc.Outputs.PublicSubnet2
@@ -33,7 +38,7 @@ Resources:
   AppRunner:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/alps-cloudformation-izdev/apprunner/apprunner.yaml
+      TemplateURL: !Sub https://s3.amazonaws.com/${CfBucket}/apprunner.yaml
       Parameters:
         BaseName:         !Ref BaseName
         OpEnv:            !Ref OpEnv

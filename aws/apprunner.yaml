@@ -1,6 +1,4 @@
 # Create the App Runner service
-# aws cloudformation deploy --template-file apprunner.yaml  --stack-name wagrun --capabilities CAPABILITY_NAMED_IAM
-
 # Took ideas from:
 # * https://www.youtube.com/watch?v=ABvx7radhw4
 # * https://github.com/aws-samples/aws-apprunner-netcore/blob/main/config/net-core-app-infra.yaml
@@ -9,7 +7,7 @@ Description: Create app runner service, pulling image from Private ECR
 
 Parameters:
   BaseName:
-    Type: String                # wagrun
+    Type: String                # scale0
   OpEnv:
     Type: String                # dev, qa, prod
   PublicSubnet1:
@@ -128,7 +126,7 @@ Resources:
               - Name: DATABASE_PASSWORD
                 Value: !Ref DatabasePassword
           ImageIdentifier: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${BaseName}:${OpEnv}
-          #ImageIdentifier: 355255540862.dkr.ecr.us-east-1.amazonaws.com/wagrun:dev
+          #ImageIdentifier: 355255540862.dkr.ecr.us-east-1.amazonaws.com/scale0:dev
           ImageRepositoryType: ECR
       # AutoScalingConfigurationArn: str
       # EncryptionConfigureation: object

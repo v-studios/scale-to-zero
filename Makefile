@@ -21,10 +21,13 @@ DOCKER_RUN       := docker run -it --rm \
 DOCKER_BASH      := $(DOCKER_RUN) bash
 
 # First, targets to get this running locally:
+# CAUTION: I'm on a Apple M1 laptop, but AppRunner's using AMD64 so build for that;
+# otherwise we'll see "exec format error" in App Runner's application logs.
+# This will make execution on macOS slower, but that's OK, it'll work.
 
 build: Dockerfile
-	docker build --progress=plain -t ${APP_NAME}:${OP_ENV} .
-	docker build --progress=plain -t ${ECR_REG_REPO_TAG} .
+	docker build --platform linux/amd64 --progress=plain -t ${APP_NAME}:${OP_ENV} .
+	docker build --platform linux/amd64 --progress=plain -t ${ECR_REG_REPO_TAG} .
 
 run:
 	$(DOCKER_RUN)

@@ -47,11 +47,50 @@ but change the title and publish, create a child page with title and
 publish, and upload media and see them in the UI.
 
 
+Build AWS Infrastructure
+========================
+
+Before we can deploy, we've got some bootstrapping to build the AWS
+infrastructure. For all the AWS work, set your profile so the CLI can
+get your creds and region; I'm verifying my region is eu-west-3 (Paris)::
+
+  export AWS_PROFILE=chris@chris+hack
+  aws configure get region
+
+We use CloudFormation nested stacks, and the main stack ``scale0-dev``
+expects to see its nested components (vpc, db, apprunner) defined in
+S3, not locally. So first create a bucket for these templates to be
+uploaded; you'll need to create a uniquely named one::
+
+  make create_bucket
+
+If you've already done this, or someone else already has the name,
+you'll get a message like this::
+
+  make_bucket failed: s3://scale0-cloudformation
+  An error occurred (BucketAlreadyOwnedByYou) when calling the
+  CreateBucket operation: Your previous request to create the named
+  bucket succeeded and you already own it.
+
+You'll need to  update the `<aws/Makefile>`_ with a new name and try again.
+
+Now we can run a target that uploads the nested stacks to our S3
+bucket, and then runs the ``scale0-dev`` cloudformation that
+references them.
+
+This is a pretty large suite. AppRunner can be finicky to get running,
+and if the app startup fails, the nested stack fails, and it takes
+down everything else in that deployment. It's probably best to deploy
+the main stack, first with the VPC, then the DB, and findally the
+AppRunner stacks; just comment and uncomment as each one is
+successfully deployed.
+
 Deploy to AWS
 =============
-set your AWS Profile to get creds and region, e.g.::
 
-  export AWS_PROFILE=scale0
+
+Set your AWS Profile to get creds and region, e.g.::
+
 
 Then run the `<Makefile>`_ target which builds the image from
 the `<Dockerfile>`_, logs into AWS ECR, creates an ECR repo if needed,
@@ -63,3 +102,14 @@ In this case, the repo is called ``scale0`` and the image tag is
 ``dev``. The repo is created outside of CloudFormation to prevent
 stack roll-back with chicken-n-egg repo and image creation.
 
+After getting DB upgraded but low enough for Aurora Serverless v1,
+redeployed infra and it comes up but has Origin check problem when I try and login::
+
+    Origin checking failed - https://ykcgyztfmf.eu-west-3.awsapprunner.com does not match any trusted origins.
+
+Redeploy image to ECR with make ecr_push.
+
+It looks like the service noticed and it's upgrading::
+
+  Status: Operation in progress
+  

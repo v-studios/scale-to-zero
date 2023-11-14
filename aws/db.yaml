@@ -31,7 +31,7 @@ Resources:
       # aws rds describe-db-engine-versions --engine aurora-postgresql --query "DBEngineVersions[].EngineVersion" -- highest is 14.3
       Engine: aurora-postgresql
       EngineMode: serverless             # only v1 at this time
-      EngineVersion: 11.13
+      EngineVersion: 13.9                # Django 4.1+ requires PSQL 12+; Serverless v1 only up to 13.9
       DatabaseName:        !Ref DatabaseName
       DBClusterIdentifier: !Ref DatabaseName # default nested stack name is > 63 char PostgreSQL limit
       DBSubnetGroupName:   !Ref DBSubnetGroup
