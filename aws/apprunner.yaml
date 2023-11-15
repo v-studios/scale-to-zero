@@ -126,9 +126,9 @@ Resources:
               - Name: DATABASE_PASSWORD
                 Value: !Ref DatabasePassword
           ImageIdentifier: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${BaseName}:${OpEnv}
-          #ImageIdentifier: 355255540862.dkr.ecr.us-east-1.amazonaws.com/scale0:dev
+          #ImageIdentifier: ZZZZ.dkr.ecr.us-east-1.amazonaws.com/scale0:dev
           ImageRepositoryType: ECR
-      # AutoScalingConfigurationArn: str
+      # AutoScalingConfigurationArn: str ARN
       # EncryptionConfigureation: object
       # HealthCheckConfiguration: obj
       # ObservabilityConfiguration: 
