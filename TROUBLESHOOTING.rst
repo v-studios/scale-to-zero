@@ -133,3 +133,44 @@ So edit the ``dev.py`` to add a wildcard for my region's domain::
 
 (The backslash in the RST protect the asterisk, but won't show in the
 rendered HTML, and are not used in the .py file.)
+
+S3 Storage Presigned URLs Don't Work
+====================================
+
+When using django-storages to store media and static assets on S3, the
+default is to generate presigned URLs that give time-limited read
+access to objects in S3. The URLs signatures were failing consistently
+with SignatureDoesNotMatch. This is a very difficult problem to track
+down.
+
+Instead of figuring it out, I've configured the S3 to allow setting
+objects ACLs in the CloudFormation aws/s3.yaml::
+
+      PublicAccessBlockConfiguration: # needed for PublicRead
+        BlockPublicAcls: false
+      OwnershipControls:        # needed for PublicRead and setting object ACL
+        Rules:
+          - ObjectOwnership: ObjectWriter
+
+Then configure our ``dev.py`` settings file to set ``public-read`` and
+not generate presigned URLs::
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": bucket_name,
+                # The default presigned URL (running on Docker) has problems:
+                # SignatureDoesNotMatch, so don't use them, set objects readable
+                "default_acl": "public-read",
+                "querystring_auth": False  # don't generate presigned URLs, they fail now
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": bucket_name,
+                "default_acl": "public-read",
+                "querystring_auth": False  # don't generate presigned URLs, they fail now
+            },
+    },

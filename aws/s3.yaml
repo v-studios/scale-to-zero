@@ -1,0 +1,36 @@
+
+Resources:
+  S3MediaBucket:
+    Type: AWS::S3::Bucket
+    # DeletionPolicy: Retain
+    # UpdateReplacePolicy: Retain
+    Properties:
+      # AccessControl: PublicRead # Requires OwnershipControls.Rules.ObjectOwner
+      # ERROR: Bucket cannot have public ACLs set with BlockPublicAccess enabled
+      #BucketName: !Sub "${AWS::StackName}-assets"
+      # BucketName generated like: scale0-dev-s3-11vqj0ojwb6rf-s3mediabucket-1vf5f69qujs46
+      CorsConfiguration:
+        CorsRules:
+        - AllowedHeaders: ['*']
+          AllowedMethods: [GET]
+          AllowedOrigins: ['*']
+          ExposedHeaders: [Date]
+          MaxAge: '300'
+      PublicAccessBlockConfiguration: # needed for PublicRead
+        BlockPublicAcls: false
+      OwnershipControls:        # needed for PublicRead and setting object ACL
+        Rules:
+          - ObjectOwnership: ObjectWriter
+      # LifecycleConfiguration:
+      #   Rules:
+      #     - Id: ExpireOldVersions
+      #       Status: Enabled
+      #       NoncurrentVersionExpirationInDays: 100
+      # VersioningConfiguration:
+      #   Status: Enabled
+
+Outputs:
+  DomainName:
+    Description: DNS domain name of the S3 bucket containing media, documents, static assets
+    Value: !GetAtt S3MediaBucket.DomainName
+    # Can also get .Arn, .RegionalDomainName, .WebsiteURL (HTTP no S)

@@ -85,12 +85,20 @@ the main stack, first with the VPC, then the DB, and findally the
 AppRunner stacks; just comment and uncomment as each one is
 successfully deployed.
 
-Deploy to AWS
-=============
+If you change anything in the ``aws/`` directory, you'll need to
+redeploy that.
 
+If you've updated your image to be imcompatible, the CloudFormation
+update may fail when it tries to launch. But we've set it to disable
+rollbacks so you shold be able to fix it by deploying the image again.
+
+
+Deploy Image to AWS
+===================
 
 Set your AWS Profile to get creds and region, e.g.::
 
+  export AWS_PROFILE=chris@chris+hack
 
 Then run the `<Makefile>`_ target which builds the image from
 the `<Dockerfile>`_, logs into AWS ECR, creates an ECR repo if needed,
@@ -99,17 +107,12 @@ then pushes the image to the ECR::
   make ecr_push
 
 In this case, the repo is called ``scale0`` and the image tag is
-``dev``. The repo is created outside of CloudFormation to prevent
-stack roll-back with chicken-n-egg repo and image creation.
+``dev``. The first time this is run, it creates an ECR repo (outside
+of CloudFormation) to prevent stack roll-back with chicken-n-egg repo
+and image creation.
 
-After getting DB upgraded but low enough for Aurora Serverless v1,
-redeployed infra and it comes up but has Origin check problem when I try and login::
+You should be able to see it going live in the App Runner Service page:
+https://eu-west-3.console.aws.amazon.com/apprunner/home?region=eu-west-3#/services/dashboard?service_arn=arn%3Aaws%3Aapprunner%3Aeu-west-3%3A150806394439%3Aservice%2Fscale0-dev%2Fafbea56dc8c14dddbd81122e1a0e9781&active_tab=logs
 
-    Origin checking failed - https://ykcgyztfmf.eu-west-3.awsapprunner.com does not match any trusted origins.
 
-Redeploy image to ECR with make ecr_push.
-
-It looks like the service noticed and it's upgrading::
-
-  Status: Operation in progress
   

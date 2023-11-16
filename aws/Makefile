@@ -22,5 +22,6 @@ deploy_dev deploy: copy_to_s3
 
 copy_to_s3:
 	aws s3 cp vpc.yaml       s3://${CF_BUCKET}
+	aws s3 cp s3.yaml	 s3://${CF_BUCKET}
 	aws s3 cp db.yaml        s3://${CF_BUCKET}
 	aws s3 cp apprunner.yaml s3://${CF_BUCKET}

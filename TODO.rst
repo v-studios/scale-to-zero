@@ -2,14 +2,19 @@
  TODO
 ======
 
-* Ensure autoscaling is enabled, up to 5 or something.
 
 * Load test to scale up apprunner: brew install hey: hey -z 5m
-* Add S3 and Django storage; how to not do this for local?
+
+* S3 how to use or not-use S3 for local?
+
+* S3 How to "manage.py collectstatic" from AWS App Runner? Or at least
+  doc it in the Docker version.
+
 * separate local from dev? how?
+  os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ncrp.settings.dev")
 * 18:41:50 Just tried to connect to service, woke up 18:42:31: does
   Django have a wait-for-db setting in place?
-
+* dj_database_url for AWS
 
 
 
@@ -20,13 +25,14 @@ In Progress
 SOON
 ====
 
-Provide S3 for media (images/documents) presistence.
-
 
 LATER
 =====
 
-SC
+Django Storages: fix presigned URLs so we don't have to make objects public-read
+
+Set CloudWatch logs to expire in 30 days
+
 Use ``cloudformation package`` to bundle all our templates (locally?
 or S3?) and deploy? But we still have to have the nedted ones on S3,
 right?::

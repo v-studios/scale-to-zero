@@ -12,13 +12,14 @@ RUN python -m venv /VENV
 WORKDIR /app
 RUN pip install wagtail         # latest version
 RUN wagtail start scale0 .      # creates /app/scale0
-RUN pip install -r requirements.txt
-RUN pip install dj-database-url psycopg2-binary django-debug-toolbar
+RUN pip install -r requirements.txt # created by "wagtail start"
+RUN pip install dj-database-url psycopg2-binary django-debug-toolbar django-storages boto3
 
 FROM ${PYTHON} AS run
 ENV PATH=/VENV/bin:${PATH}
 ENV PYTHONUNBUFFERED=1 PORT=8000
 ENV DATABASE_URL=${DATABASE_URL}
+ENV AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
 COPY --from=install /VENV /VENV
 COPY --from=install /app /app
 WORKDIR /app

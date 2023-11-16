@@ -15,10 +15,15 @@ DOCKER_RUN       := docker run -it --rm \
 		    -p 8000:8000 \
 		    -v `pwd`/db:/app/db \
 		    -v `pwd`/media:/app/media \
+		    -v ${HOME}/.aws/credentials:/root/.aws/credentials \
 		    -e DATABASE_URL="sqlite:////app/db/scale0.sqlite" \
+		    -e AWS_STORAGE_BUCKET_NAME \
+		    -e AWS_PROFILE=chris@chris+hack \
 		    --name scale0 \
 		    scale0:dev 
 DOCKER_BASH      := $(DOCKER_RUN) bash
+
+AWS_STORAGE_BUCKET_NAME := scale0-dev-s3-11vqj0ojwb6rf-s3mediabucket-1vf5f69qujs46
 
 # First, targets to get this running locally:
 # CAUTION: I'm on a Apple M1 laptop, but AppRunner's using AMD64 so build for that;
@@ -35,6 +40,9 @@ run:
 bash:
 	$(DOCKER_BASH)
 
+exec:
+	@echo Connecting to running instance...
+	docker exec -it scale0 bash
 
 # The targets to deploy containers to AWS ECR; also uses `build` above:
 

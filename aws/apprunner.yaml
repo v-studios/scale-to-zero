@@ -125,6 +125,8 @@ Resources:
                 Value: !Ref DatabaseUser
               - Name: DATABASE_PASSWORD
                 Value: !Ref DatabasePassword
+              - Name: AWS_STORAGE_BUCKET_NAME # for Django Storages
+                Value: !Ref S3Name
           ImageIdentifier: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${BaseName}:${OpEnv}
           #ImageIdentifier: ZZZZ.dkr.ecr.us-east-1.amazonaws.com/scale0:dev
           ImageRepositoryType: ECR
