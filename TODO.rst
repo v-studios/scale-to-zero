@@ -16,6 +16,9 @@
   Django have a wait-for-db setting in place?
 * dj_database_url for AWS
 
+* Get S3 name for Docker: aws cloudformation
+  describe-stacks --stack-name scale0-dev --query "Stacks[0]"
+
 
 
 In Progress

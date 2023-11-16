@@ -16,6 +16,8 @@ Parameters:
     Type: String
   SecurityGroup:
     Type: String
+  S3Name:
+    Type: String
   # DatabaseUrl:
   #   Type: String
   DatabaseHost:

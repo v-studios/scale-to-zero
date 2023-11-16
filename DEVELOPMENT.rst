@@ -6,7 +6,6 @@ Notes on getting this running locally and deployed. We start by
 getting it running locally, then we send to AWS.
 
 
-
 Run locally
 ===========
 
@@ -115,4 +114,30 @@ You should be able to see it going live in the App Runner Service page:
 https://eu-west-3.console.aws.amazon.com/apprunner/home?region=eu-west-3#/services/dashboard?service_arn=arn%3Aaws%3Aapprunner%3Aeu-west-3%3A150806394439%3Aservice%2Fscale0-dev%2Fafbea56dc8c14dddbd81122e1a0e9781&active_tab=logs
 
 
-  
+S3 Storage and ``collectstatic``
+================================
+
+We're using S3 now for media (images, documents) and static assets
+(css, js, etc) so they'll persist across App Runner death and rebirth,
+just like the data in the external PostgreSQL.
+
+In Django (and Wagtail), we need to push our statics to S3 initially,
+and when we change. This is easy on a single server: just hop on and
+give the command. But we can't do that when it's running in App Runner
+-- there's no access to run a one-off command.
+
+Instead, we give our Docker access to our AWS credentials and the
+(hard-coded) S3 bucket name, and run it locally with a bash shell.
+Then we can simply::
+
+  ./manage.py collectstatic
+
+This takes a little while.
+
+Note that if we manage content on the local Docker Wagtail -- e.g.,
+uploading media -- it will pollute the S3 bucket: the AppRunner
+instances the PostgreSQL won't know about them, since locally we use
+SQLite.
+
+It might be smart to have a Docker run command that runs truly
+locally, and another that uses S3 for our Django Djanitorial needs.

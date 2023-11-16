@@ -1,5 +1,7 @@
 from .base import *
 
+import dj_database_url
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -19,7 +21,7 @@ CSRF_TRUSTED_ORIGINS=[
 ]
 
 bucket_name = os.environ.get("AWS_STORAGE_BUCKET_NAME")
-print(f"### Doing STORAGES: {bucket_name=}")
+print(f"#### DEV.PY Doing STORAGES: {bucket_name=}")
 if bucket_name:
     print(f"### Doing STORAGES configuring STORAGES for S3...")
     INSTALLED_APPS.append("storages")  # media/ and static/ in S3
@@ -32,7 +34,7 @@ if bucket_name:
                 # The default presigned URL (running on Docker) has problems:
                 # SignatureDoesNotMatch, so don't use them, set objects readable
                 "default_acl": "public-read",
-                "querystring_auth": False  # don't generate presigned URLs, they fail now
+                "querystring_auth": False,  # don't generate presigned URLs, they fail now
             },
         },
         "staticfiles": {
@@ -40,7 +42,7 @@ if bucket_name:
             "OPTIONS": {
                 "bucket_name": bucket_name,
                 "default_acl": "public-read",
-                "querystring_auth": False  # don't generate presigned URLs, they fail now
+                "querystring_auth": False,  # don't generate presigned URLs, they fail now
             },
     },
 }
@@ -50,7 +52,6 @@ if bucket_name:
 #    DATABASE_URL="sqlite:////tmp/db.sqlite3"
 #    DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/NAME"
 print("###### DEV.PY goes searching for database")
-import dj_database_url
 database_url = os.environ.get("DATABASE_URL")  # all pieces in one variable, but not parsing correctly
 database_host = os.environ.get("DATABASE_HOST")
 database_port = os.environ.get("DATABASE_PORT")

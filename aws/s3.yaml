@@ -30,7 +30,6 @@ Resources:
       #   Status: Enabled
 
 Outputs:
-  DomainName:
-    Description: DNS domain name of the S3 bucket containing media, documents, static assets
-    Value: !GetAtt S3MediaBucket.DomainName
-    # Can also get .Arn, .RegionalDomainName, .WebsiteURL (HTTP no S)
+  Name:
+    Description: Bucket name (with no domain) containing media, documents, static assets
+    Value: !Ref S3MediaBucket
