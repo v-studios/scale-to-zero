@@ -2,8 +2,8 @@
  DEVELOPMENT
 =============
 
-Notes on getting this running locally and deployed. We start by
-getting it running locally, then we send to AWS.
+Notes on getting this running locally, creating the AWS
+infrastructure, then deploying to AWS.
 
 
 Run locally
@@ -82,16 +82,16 @@ references them.
 This is a pretty large suite. AppRunner can be finicky to get running,
 and if the app startup fails, the nested stack fails, and it takes
 down everything else in that deployment. It's probably best to deploy
-the main stack, first with the VPC, then the DB, and findally the
+the main stack, first with the VPC, then the DB, and finally the
 AppRunner stacks; just comment and uncomment as each one is
 successfully deployed.
 
 If you change anything in the ``aws/`` directory, you'll need to
 redeploy that.
 
-If you've updated your image to be imcompatible, the CloudFormation
+If you've updated your image to be incompatible, the CloudFormation
 update may fail when it tries to launch. But we've set it to disable
-rollbacks so you shold be able to fix it by deploying the image again.
+rollbacks so you should be able to fix it by deploying the image again.
 
 
 Deploy Image to AWS
@@ -126,23 +126,36 @@ We're using S3 now for media (images, documents) and static assets
 (css, js, etc) so they'll persist across App Runner death and rebirth,
 just like the data in the external PostgreSQL.
 
-In Django (and Wagtail), we need to push our statics to S3 initially,
-and when we change. This is easy on a single server: just hop on and
-give the command. But we can't do that when it's running in App Runner
--- there's no access to run a one-off command.
+In Django (and Wagtail), we need to push our statics to S3 initially
+and when we change the code. This is easy on a single server: just hop
+on and give the command. But we can't do that when it's running in App
+Runner -- there's no access to run a one-off command.
 
 Instead, we give our Docker access to our AWS credentials and the
 (hard-coded) S3 bucket name, and run it locally with a bash shell.
-Then we can simply::
+There's a separate target for that, so we can invoke that::
 
-  ./manage.py collectstatic
+  make s3_bash
 
-This takes a little while.
+then in the container with S3 access, run the Django command::
 
-Note that if we manage content on the local Docker Wagtail -- e.g.,
-uploading media -- it will pollute the S3 bucket: the AppRunner
-instances the PostgreSQL won't know about them, since locally we use
-SQLite.
+  root@70f347c6414c:/app# ./manage.py  collectstatic -v3
+  ...
+  You have requested to collect static files at the destination
+  location as specified in your settings.
+  This will overwrite existing files!
+  Are you sure you want to do this?
+  Type 'yes' to continue, or 'no' to cancel: yes
+  Deleting 'js/scale0.js'
+  Copying '/app/scale0/static/js/scale0.js'
+  ...
+  Deleting 'admin/img/gis/move_vertex_off.svg'
+  Copying '/VENV/lib/python3.12/site-packages/django/contrib/admin/static/admin/img/gis/move_vertex_off.svg'
+  223 static files copied.
 
-It might be smart to have a Docker run command that runs truly
-locally, and another that uses S3 for our Django Djanitorial needs.
+This takes a few minutes.
+
+Note that if we manage content on Docker with S3 access -- e.g.,
+uploading media -- it will pollute the S3 bucket: App Runner's
+PostgreSQL database won't know about them, since we use SQLite for
+Docker.
