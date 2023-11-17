@@ -21,9 +21,9 @@ CSRF_TRUSTED_ORIGINS=[
 ]
 
 bucket_name = os.environ.get("AWS_STORAGE_BUCKET_NAME")
-print(f"#### DEV.PY Doing STORAGES: {bucket_name=}")
+print(f"#### DEV.PY STORAGES: {bucket_name=}")
 if bucket_name:
-    print(f"### Doing STORAGES configuring STORAGES for S3...")
+    print(f"#### DEV.PY STORAGES configuring STORAGES for S3...")
     INSTALLED_APPS.append("storages")  # media/ and static/ in S3
     del STATICFILES_STORAGE            # conflicts with STORAGES
     STORAGES = {
@@ -31,18 +31,17 @@ if bucket_name:
             "BACKEND": "storages.backends.s3.S3Storage",
             "OPTIONS": {
                 "bucket_name": bucket_name,
-                # The default presigned URL (running on Docker) has problems:
-                # SignatureDoesNotMatch, so don't use them, set objects readable
-                "default_acl": "public-read",
-                "querystring_auth": False,  # don't generate presigned URLs, they fail now
+                # Default behavior uses non-public objects with Presigned URLs.
+                #"default_acl": "public-read",
+                #"querystring_auth": False,
             },
         },
         "staticfiles": {
             "BACKEND": "storages.backends.s3.S3Storage",
             "OPTIONS": {
                 "bucket_name": bucket_name,
-                "default_acl": "public-read",
-                "querystring_auth": False,  # don't generate presigned URLs, they fail now
+                #"default_acl": "public-read",
+                #"querystring_auth": False,
             },
     },
 }
@@ -51,15 +50,14 @@ if bucket_name:
 # If DATABASE_URL is defined, configure from that:
 #    DATABASE_URL="sqlite:////tmp/db.sqlite3"
 #    DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/NAME"
-print("###### DEV.PY goes searching for database")
 database_url = os.environ.get("DATABASE_URL")  # all pieces in one variable, but not parsing correctly
 database_host = os.environ.get("DATABASE_HOST")
 database_port = os.environ.get("DATABASE_PORT")
 database_name = os.environ.get("DATABASE_NAME")
 database_user = os.environ.get("DATABASE_USER")
 database_password = os.environ.get("DATABASE_PASSWORD")
-print(f"## {database_url=}")
-print(f"## {database_host=} {database_port=} {database_name=} {database_user=} {database_password=}")
+print(f"#### DEV.PY {database_url=}")
+print(f"#### DEV.PY {database_host=} {database_port=} {database_name=} {database_user=} {database_password=}")
 # I think dj_database_url isn't parsing DATABASE_URL properly, if it thinks NAME is the entire string:
 #   'wagrundev.cluster-cwdazoayirv4.us-east-1.rds.amazonaws.com:5432/wagrundev' (73 characters)
 #   is longer than PostgreSQL's limit of 63 characters

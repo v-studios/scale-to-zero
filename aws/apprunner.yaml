@@ -83,7 +83,8 @@ Resources:
             Action:
               - 's3:Get*'       # media and assets
               - 's3:PutObject*' # store uploaded media
-            Resource: '*'       # TODO we don't yet store assets/media in S3 but we will
+              - 's3:PutObjectAcl*' # TODO trying to make upload form AJAX POST work
+            Resource: '*'       # TODO reference our S3 ARN
 
   VpcConnector:                 # Needed to access RDS in VPC
     Type: AWS::AppRunner::VpcConnector
@@ -130,16 +131,10 @@ Resources:
               - Name: AWS_STORAGE_BUCKET_NAME # for Django Storages
                 Value: !Ref S3Name
           ImageIdentifier: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${BaseName}:${OpEnv}
-          #ImageIdentifier: ZZZZ.dkr.ecr.us-east-1.amazonaws.com/scale0:dev
           ImageRepositoryType: ECR
-      # AutoScalingConfigurationArn: str ARN
-      # EncryptionConfigureation: object
-      # HealthCheckConfiguration: obj
-      # ObservabilityConfiguration: 
-      # Tags
 
 Outputs:
   Url:
-    Description: The HTTP endpoint of the service but we need HTTPS to access it
+    Description: The HTTP endpoint of the service but we need to use HTTPS to access it
     Value: !GetAtt Service.ServiceUrl
 
