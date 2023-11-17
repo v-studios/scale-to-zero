@@ -4,28 +4,22 @@
 
 2023-11-17 13:15 START
 
-* S3 how to use or not-use S3 for local?
-
+* dj_database_url for AWS
 
 * Load test to scale up apprunner: brew install hey: hey -z 5m
-
 
 * 18:41:50 Just tried to connect to service, woke up 18:42:31: does
   Django have a wait-for-db setting in place?
 
-* dj_database_url for AWS
 
 * Get S3 name for Docker: aws cloudformation
   describe-stacks --stack-name scale0-dev --query "Stacks[0]"
 
-
-
-LATER
-=====
-
 Set CloudWatch logs to expire in 30 days
 
 Should I switch to finch?? Will it help building multiarchitecture builds?
+
+
 
 
 
