@@ -50,9 +50,11 @@ Build AWS Infrastructure
 ========================
 
 Before we can deploy, we've got some bootstrapping to build the AWS
-infrastructure. For all the AWS work, set your profile so the CLI can
-get your creds and region; I'm verifying my region is eu-west-3 (Paris)::
+infrastructure. For all the AWS work, change in to the ``aws/``
+directory, then set your profile so the CLI can get your creds and
+region; I'm verifying my region is eu-west-3 (Paris)::
 
+  cd aws
   export AWS_PROFILE=chris@chris+hack
   aws configure get region
 
@@ -61,7 +63,7 @@ expects to see its nested components (vpc, db, apprunner) defined in
 S3, not locally. So first create a bucket for these templates to be
 uploaded; you'll need to create a uniquely named one::
 
-  make create_bucket
+  make create_s3
 
 If you've already done this, or someone else already has the name,
 you'll get a message like this::
@@ -73,8 +75,8 @@ you'll get a message like this::
 
 You'll need to  update the `<aws/Makefile>`_ with a new name and try again.
 
-Now we can run a target that uploads the nested stacks to our S3
-bucket, and then runs the ``scale0-dev`` cloudformation that
+Now we can run a target that packages the nested stacks to our S3
+bucket, and then deploys the ``scale0-dev`` cloudformation that
 references them.
 
 This is a pretty large suite. AppRunner can be finicky to get running,
@@ -94,6 +96,9 @@ rollbacks so you shold be able to fix it by deploying the image again.
 
 Deploy Image to AWS
 ===================
+
+Our app is in the main code repo dir so all the ``make`` commands are
+executed there.
 
 Set your AWS Profile to get creds and region, e.g.::
 

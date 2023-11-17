@@ -1,6 +1,4 @@
-# aws cloudformation deploy --template-file scale0-dev.yaml --stack-name scale0-dev --capabilities CAPABILITY_NAMED_IAM
-
-# Do not create ECR here but externally so it can be used by all
+# Don't create ECR here but externally so it can be used by all
 # environments: dev, qa, prod. This will avoid chicken versus egg
 # where CloudFormation creates ECR but then its Apprunner can't find
 # an image yet so it rolls everything back to zero.
@@ -13,26 +11,23 @@ Parameters:
   OpEnv:
     Type: String
     Default: dev
-  CfBucket:
-    Type: String
-    Default: DEFINE WITH PARAMETER
 
 
 Resources:
   Vpc:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://s3.amazonaws.com/${CfBucket}/vpc.yaml
+      TemplateURL: vpc.yaml
 
   S3:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://s3.amazonaws.com/${CfBucket}/s3.yaml
+      TemplateURL: s3.yaml
 
   Db:
     Type: AWS::CloudFormation::Stack
     Properties: 
-      TemplateURL: !Sub https://s3.amazonaws.com/${CfBucket}/db.yaml
+      TemplateURL: db.yaml
       Parameters:
         PublicSubnet1:  !GetAtt Vpc.Outputs.PublicSubnet1
         PublicSubnet2:  !GetAtt Vpc.Outputs.PublicSubnet2
@@ -42,7 +37,7 @@ Resources:
   AppRunner:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://s3.amazonaws.com/${CfBucket}/apprunner.yaml
+      TemplateURL: apprunner.yaml
       Parameters:
         BaseName:         !Ref BaseName
         OpEnv:            !Ref OpEnv
