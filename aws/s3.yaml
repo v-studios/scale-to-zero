@@ -30,3 +30,6 @@ Outputs:
   Name:
     Description: Bucket name (with no domain) containing media, documents, static assets
     Value: !Ref S3MediaBucket
+  Arn:
+    Description: Bucket ARN referenced by App Runner IAM policies
+    Value: !GetAtt S3MediaBucket.Arn

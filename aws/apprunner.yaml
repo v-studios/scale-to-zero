@@ -20,6 +20,8 @@ Parameters:
     Type: String
   S3Name:
     Type: String
+  S3Arn:
+    Type: String
 
 
 Resources:
@@ -75,11 +77,7 @@ Resources:
               - s3:GetBucketLocation
               - s3:ListBucketMultipartUploads # needed?
               - s3:ListBucketVersions         # needed?
-
-              - 's3:Get*'       # media and assets
-              - 's3:PutObject*' # store uploaded media
-              - 's3:PutObjectAcl*' # TODO trying to make upload form AJAX POST work
-            Resource: '*'       # TODO reference our S3 BUCKET ARN
+            Resource: !Sub ${S3Arn}           # Bucket
           - Effect: Allow
             Action:
             - s3:DeleteObject
@@ -89,7 +87,7 @@ Resources:
             - s3:PutObjectAcl
             - s3:ListMultipartUploadParts # needed?
             - s3:AbortMultipartUpload     # needed?
-            Resource: '*'       # TODO reference our S3 OBJECT /* ARN
+            Resource: !Sub '${S3Arn}/*'   # Bucket Objects
   VpcConnector:                 # Needed to access RDS in VPC
     Type: AWS::AppRunner::VpcConnector
     Properties:
