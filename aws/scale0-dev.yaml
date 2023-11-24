@@ -45,4 +45,5 @@ Resources:
         PublicSubnet2:    !GetAtt Vpc.Outputs.PublicSubnet2
         SecurityGroup:    !GetAtt Vpc.Outputs.SecurityGroupAppRunner
         S3Name:           !GetAtt S3.Outputs.Name
+        S3Arn:            !GetAtt S3.Outputs.Arn
         DatabaseUrl:      !Sub "postgres://${Db.Outputs.DatabaseUser}:${Db.Outputs.DatabasePassword}@${Db.Outputs.Host}:${Db.Outputs.Port}/${Db.Outputs.Name}"

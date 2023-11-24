@@ -111,6 +111,17 @@ Resources:
           ToPort: 5432
       VpcId: !Ref VPC
 
+  S3VpcEndpoint:
+    # We need this VPCE type=Gateway so App Runner can reach S3.
+    # I'm surprised I need this: I thought App Runner was in Public VPC with access to S3.
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      RouteTableIds:
+        - !Ref PublicRouteTable
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+      VpcId: !Ref VPC
+
+
 Outputs:
   VpcId:
     Description: A reference to the created VPC

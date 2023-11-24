@@ -29,19 +29,15 @@ if bucket_name:
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
+            # Default behavior uses non-public objects with Presigned URLs.
             "OPTIONS": {
                 "bucket_name": bucket_name,
-                # Default behavior uses non-public objects with Presigned URLs.
-                #"default_acl": "public-read",
-                #"querystring_auth": False,
             },
         },
         "staticfiles": {
             "BACKEND": "storages.backends.s3.S3Storage",
             "OPTIONS": {
                 "bucket_name": bucket_name,
-                #"default_acl": "public-read",
-                #"querystring_auth": False,
             },
     },
 }

@@ -38,7 +38,6 @@ and under there, are logs for each instance, like:
   instance/$InstanceID
 
 
-
 App Runner: Service doesn't launch -- wrong image architecture
 ==============================================================
 
@@ -174,3 +173,36 @@ not generate presigned URLs::
                 "querystring_auth": False  # don't generate presigned URLs, they fail now
             },
     },
+
+Wagtail Upload fails on /add timeout
+====================================
+
+When running in App Runner, Wagtail image and document upload fail;
+the icon shows up and preview says "100%" but the browser console
+shows ``add/`` is ``pending`` for 2 minutes then times out::
+
+    Request URL: https://ykcgyztfmf.eu-west-3.awsapprunner.com/admin/images/multiple/add/
+    Request Method: POST
+    Status Code: 502 Bad Gateway
+    Remote Address: 35.180.239.62:443
+    Referrer Policy: same-origin
+
+In the app logs we see the timeout::
+
+  urllib3.exceptions.ConnectTimeoutError:
+  (<botocore.awsrequest.AWSHTTPSConnection object at 0x7fbd4f3c8c20>,
+  'Connection to
+  scale0-dev-s3-11vqj0ojwb6rf-s3mediabucket-1vf5f69qujs46.s3.eu-west-3.amazonaws.com
+  timed out. (connect timeout=60)')
+  ...
+  botocore.exceptions.ConnectTimeoutError: Connect timeout on endpoint
+  URL:
+  "https://scale0-dev-s3-11vqj0ojwb6rf-s3mediabucket-1vf5f69qujs46.s3.eu-west-3.amazonaws.com/original_images/chris-candle.jpg"
+
+Running locally, with my full IAM rights, worked fine.
+
+It turned out that (in addition to sane IAM for S3) I had to create a
+VPC Endpoint to S3 so that App Runner could reach it.
+
+This works fine with Django Storages default non-public-read ACL and
+its presigned URLs to the resources, so we can lock down the bucket.
