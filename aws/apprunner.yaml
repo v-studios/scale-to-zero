@@ -45,13 +45,16 @@ Resources:
             Statement:
             - Effect: Allow
               Action:
-                - 'ecr:GetAuthorizationToken'
-                - 'ecr:BatchCheckLayerAvailability'
-                - 'ecr:GetDownloadUrlForLayer'
-                - 'ecr:BatchGetImage'
-                - 'logs:CreateLogStream'
-                - 'logs:PutLogEvents'
-              Resource: '*'     # TODO narrow it to our ECR name, and to logGroups/logStreams
+                - ecr:GetAuthorizationToken
+                - ecr:BatchCheckLayerAvailability
+                - ecr:GetDownloadUrlForLayer
+                - ecr:BatchGetImage
+              Resource: '*' # TODO narrow it to our ECR name (our ECR isn't managed by CF)
+            - Effect: Allow
+              Action:
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: '*' # TODO narrow it to our logGroups/logStreams (not a named CF Resource)
 
   InstanceRole:
     Type: AWS::IAM::Role
