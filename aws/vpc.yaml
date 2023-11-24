@@ -1,11 +1,11 @@
 # Based on, but removing PrivateSubnets and NATGW to save cost:
 # https://docs.aws.amazon.com/codebuild/latest/userguide/cloudformation-vpc-template.html
 
-Description: This template deploys a VPC, with a pair of public
-  subnets spread across two Availability Zones. It deploys an internet
-  gateway, with a default route on the public subnets. It creates a
-  no-ingres security group which we can reference for AppRunner to
-  reach the VPC.
+Description: Deploys a VPC with a pair of public subnets spread across
+  two Availability Zones; an internet gateway with a default route on
+  the public subnets; a no-ingres security group which we
+  can reference for AppRunner to reach the VPC, and a DB security
+  group that allows that SG to connect on 5432.
 
 Parameters:
   VpcCIDR:

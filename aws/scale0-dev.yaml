@@ -4,7 +4,7 @@
 # an image yet so it rolls everything back to zero.
 
 Parameters:
-  # BaseName and OpEnv are used to tag images in the repo, like .../wagrun:dev
+  # BaseName and OpEnv are used to tag images in the repo, like .../scale0:dev
   BaseName:
     Type: String
     Default: scale0
@@ -45,10 +45,4 @@ Resources:
         PublicSubnet2:    !GetAtt Vpc.Outputs.PublicSubnet2
         SecurityGroup:    !GetAtt Vpc.Outputs.SecurityGroupAppRunner
         S3Name:           !GetAtt S3.Outputs.Name
-        DatabaseHost:     !GetAtt Db.Outputs.Host
-        DatabasePort:     !GetAtt Db.Outputs.Port
-        DatabaseName:     !GetAtt Db.Outputs.Name
-        DatabaseUser:     !GetAtt Db.Outputs.DatabaseUser
-        DatabasePassword: !GetAtt Db.Outputs.DatabasePassword
-        # This doesn't seem to get parsed properly, causing Django to say DB Name is 73 chars, whole string length
-        #DatabaseUrl: !Sub "postgres://dbuser@ChangeMe/${Db.Outputs.Address}:${Db.Outputs.Port}/${Db.Outputs.Name}"
+        DatabaseUrl:      !Sub "postgres://${Db.Outputs.DatabaseUser}:${Db.Outputs.DatabasePassword}@${Db.Outputs.Host}:${Db.Outputs.Port}/${Db.Outputs.Name}"

@@ -16,19 +16,9 @@ Parameters:
     Type: String
   SecurityGroup:
     Type: String
+  DatabaseUrl:
+    Type: String
   S3Name:
-    Type: String
-  # DatabaseUrl:
-  #   Type: String
-  DatabaseHost:
-    Type: String
-  DatabasePort:
-    Type: String
-  DatabaseName:
-    Type: String
-  DatabaseUser:
-    Type: String
-  DatabasePassword:
     Type: String
 
 
@@ -105,7 +95,7 @@ Resources:
         InstanceRoleArn: !GetAtt InstanceRole.Arn
       NetworkConfiguration:      # Needed for RDS in VPC
         EgressConfiguration:
-          EgressType: VPC
+          EgressType: VPC        # Needed to access RDS in VPCw
           VpcConnectorArn: !GetAtt VpcConnector.VpcConnectorArn
       ServiceName: !Sub ${BaseName}-${OpEnv}
       SourceConfiguration:
@@ -116,18 +106,8 @@ Resources:
           ImageConfiguration:
             Port: 8000
             RuntimeEnvironmentVariables:
-              # - Name: DATABASE_URL
-              #   Value: !Ref DatabaseUrl
-              - Name: DATABASE_HOST
-                Value: !Ref DatabaseHost
-              - Name: DATABASE_PORT
-                Value: !Ref DatabasePort
-              - Name: DATABASE_NAME
-                Value: !Ref DatabaseName
-              - Name: DATABASE_USER
-                Value: !Ref DatabaseUser
-              - Name: DATABASE_PASSWORD
-                Value: !Ref DatabasePassword
+              - Name: DATABASE_URL
+                Value: !Ref DatabaseUrl
               - Name: AWS_STORAGE_BUCKET_NAME # for Django Storages
                 Value: !Ref S3Name
           ImageIdentifier: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${BaseName}:${OpEnv}

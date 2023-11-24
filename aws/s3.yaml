@@ -5,9 +5,6 @@ Resources:
     # DeletionPolicy: Retain
     # UpdateReplacePolicy: Retain
     Properties:
-      # AccessControl: PublicRead # Requires OwnershipControls.Rules.ObjectOwner
-      # ERROR: Bucket cannot have public ACLs set with BlockPublicAccess enabled
-      #BucketName: !Sub "${AWS::StackName}-assets"
       # BucketName generated like: scale0-dev-s3-11vqj0ojwb6rf-s3mediabucket-1vf5f69qujs46
       CorsConfiguration:
         CorsRules:
@@ -16,9 +13,9 @@ Resources:
           AllowedOrigins: ['*']
           ExposedHeaders: [Date]
           MaxAge: '300'
-      PublicAccessBlockConfiguration: # needed for PublicRead
+      PublicAccessBlockConfiguration: # needed to set acl=public-read
         BlockPublicAcls: false
-      OwnershipControls:        # needed for PublicRead and setting object ACL
+      OwnershipControls:        # needed if we want to set acl=public-read
         Rules:
           - ObjectOwnership: ObjectWriter
       # LifecycleConfiguration:

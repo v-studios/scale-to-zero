@@ -17,7 +17,7 @@ cf_deploy deploy: ${STACK_NAME}-packaged.yaml
 	--disable-rollback \
 	--capabilities CAPABILITY_NAMED_IAM
 
-cf_package ${STACK_NAME}-packaged.yaml: ${STACK_NAME}.yaml
+cf_package ${STACK_NAME}-packaged.yaml: ${STACK_NAME}.yaml apprunner.yaml db.yaml s3.yaml vpc.yaml
 	aws cloudformation package \
 	--template-file ${STACK_NAME}.yaml \
 	--s3-bucket ${CF_BUCKET} \

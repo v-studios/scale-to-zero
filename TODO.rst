@@ -4,29 +4,18 @@
 
 2023-11-17 13:15 START
 
-* dj_database_url for AWS
-
-* Load test to scale up apprunner: brew install hey: hey -z 5m
-
-* 18:41:50 Just tried to connect to service, woke up 18:42:31: does
-  Django have a wait-for-db setting in place?
-
-
+* Doc that App Runner udpates on new ECR image automatically.
+* Doc logs for app
+* Set CloudWatch logs to expire in 30 days
 * Get S3 name for Docker: aws cloudformation
   describe-stacks --stack-name scale0-dev --query "Stacks[0]"
+* Should I build separate ARM (M1) and AMD (AWS) images?
+* Should I switch to finch?? Will it help building multiarchitecture builds?
+* Do I need the VPC public gateway?
+* Do I need the routes, or does that get me to DB and S3?
 
-Set CloudWatch logs to expire in 30 days
-
-Should I switch to finch?? Will it help building multiarchitecture builds?
-
-
-
-
-
-
-
-AppRunner Upload Image/Document `add/` times out
-================================================
+PROBLEM: AppRunner Upload Image/Document `add/` times out
+=========================================================
 
 I've used the default presigned URLs and it seems to work, so we don't
 need to set S3 objects to public-read.
