@@ -11,7 +11,7 @@ not be do-able.
 * Get S3 name for Docker: aws cloudformation
   describe-stacks --stack-name scale0-dev --query "Stacks[0]"
 * Should I build separate ARM (M1) and AMD (AWS) images?
-* Should I switch to finch?? Will it help building multiarchitecture builds?
+* Should I switch to finch?? Will it help building multi-architecture builds?
 * Do I need the VPC public gateway?
 * Do I need the routes, or does that get me to DB and S3?
 * Use Django Persistent connections to attempt to avoid overwhelming

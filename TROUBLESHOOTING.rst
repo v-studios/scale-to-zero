@@ -27,7 +27,7 @@ are in::
 
   CloudWatch > Log groups > /aws/apprunner/scale0-dev/$UUID/service > deployment
 
-The console also linnks to the application's logs in Cloudwatch::
+The console also links to the application's logs in CloudWatch::
 
   /aws/apprunner/scale0-dev/$UUID/application/...
 
@@ -103,10 +103,10 @@ not being supported.
 
 Way down in the bottom right corner of the `RDS Create Database
 <https://eu-west-3.console.aws.amazon.com/rds/home?region=eu-west-3#launch-dbinstance:>`_,
-page, after chosing ``Aurora (PostgreSQL Compatible)`` page, it lists
+page, after choosing ``Aurora (PostgreSQL Compatible)`` page, it lists
 compatible versions::
 
-  Severless v1
+  Serverless v1
   11.18, 13.9
 
 So I updated my CloudFormation ``db.yaml`` to use ``13.9`` and after

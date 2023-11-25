@@ -7,7 +7,7 @@ suited for running pure HTTP apps that don't need all the features
 that `Fargate <https://aws.amazon.com/fargate/>`_ provides. The config
 is much simpler, it auto-scales based on demand, and it includes its
 own load balancer. As of February 2022, it can access things in a VPC,
-so we can have our app persist to an RDS dataase including Aurora
+so we can have our app persist to an RDS database including Aurora
 serverless. See:
 
 * Excellent blog post comparing simplicity and cost: `Fargate vs. App
@@ -21,7 +21,7 @@ Both App Runner and `Aurora Serverless v1
 can scale to zero to save money on sites that aren't used 24x7. When
 requests subside, App Runner saves the state to RAM to allow instant
 restart, and charges about 1/10th the cost of running with CPU. When
-Aurora Serverless v1 sleeps, it takes about 30 soconds to wake up.
+Aurora Serverless v1 sleeps, it takes about 30 seconds to wake up.
 
 This code deploys a stock `Wagtail CMS <https://wagtail.org/>`_ (based
 on `Django <https://www.djangoproject.com/>`_) with PostgreSQL DB and
@@ -62,7 +62,7 @@ access.
 The developer creates a Docker image with Wagtail and uploads to
 `Elastic Container Registry (ECR) <https://aws.amazon.com/ecr/>`_. App
 Runner will see new images and deploy them automatically. Once the
-healthcheck probe is successful, it directs traffic to the new service
+health check probe is successful, it directs traffic to the new service
 instance instead of the old.
 
 TODO: update image with current diagram.
@@ -127,7 +127,7 @@ App Runner
 ----------
 
 The "Auto scaling" section of the App Runner > Services > scale0-dev >
-Connfiguration shows::
+Configuration shows::
 
   Name:              DefaultConfiguration
   Revision number:   1

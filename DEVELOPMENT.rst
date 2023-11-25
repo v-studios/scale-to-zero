@@ -97,7 +97,7 @@ infrastructure. We'll build a VPC, subnets, database, S3, App Runner,
 and everything the service needs using CloudFormation. Everything is
 in the ``aws/`` directory. It uses nested stacks for VPC, RDS, S3, and App
 Runner; the top level stack passes outputs from one stack to the next
-which uses them. Currently there is only a ``wagrun-dev.yaml`` top
+which uses them. Currently there is only a ``scale0-dev.yaml`` top
 level stack.
 
 The ``Makefile`` has a default target that packages the sub-stack files,

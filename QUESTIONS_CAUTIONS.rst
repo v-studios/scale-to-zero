@@ -1,5 +1,5 @@
 ======================
-Quesionts and Cautions
+Questions and Cautions
 ======================
 
 Aurora Serverless v1 Scaling
@@ -21,7 +21,7 @@ says:
   point and scale quickly enough
 
 We'd like to find a way to speed scaling up on high load, though the
-``hey`` load tester is not realiztic. We'd like it to scale so we
+``hey`` load tester is not realistic. We'd like it to scale so we
 don't run out of database connections. This doc discusses `How Aurora
 Serverless v1 works
 <https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v1.how-it-works.html#aurora-serverless.how-it-works.auto-scaling>`_
@@ -30,7 +30,7 @@ Serverless v1 works
 Why not v2?
 ===========
 
-So why not use Aurora Serverless v2, insetad of v1? We're using v1
+So why not use Aurora Serverless v2, instead of v1? We're using v1
 because it scales to 0 ACU, so costs nothing but the disk our data
 needs. Aurora Serverless v2 scales down to 0.5 ACU, which means it
 costs money for CPU even if nothing is using it -- exactly what we are
