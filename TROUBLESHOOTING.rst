@@ -9,7 +9,6 @@ The AWS App Runner web console shows some logs from Cloud Watch.
 
 The "App Runner event logs" like::
 
-
   [AppRunner] Successfully copied the image from ECR.
   [AppRunner] Provisioning instances and deploying image for publicly accessible service.
   [AppRunner] Performing health check on port '8000'.
@@ -28,12 +27,11 @@ are in::
 
   CloudWatch > Log groups > /aws/apprunner/scale0-dev/$UUID/service > deployment
 
-But the logs from the application itself are not available in the
-console; they're in CloudWatch::
+The console also linnks to the application's logs in Cloudwatch::
 
   /aws/apprunner/scale0-dev/$UUID/application/...
 
-and under there, are logs for each instance, like:
+and under there, are logs for each instance, like::
 
   instance/$InstanceID
 
@@ -75,7 +73,7 @@ target in the ``Makefile`` to specify the AMD architecture::
 
 When I rebuilt and pushed to ECR, App Runner picked up the new image
 and started running it. In about 5 minutes, the service was up and
-running.
+running. Huzzah!
 
 Sadly, the ECR does not show the architecture of the image, and App
 Runner doesn't check it before trying to run it so it can report
@@ -85,7 +83,9 @@ something useful. ``#AWSwishList``
 My Django Needed a More Recent PostgreSQL
 =========================================
 
-After resolving the image architecture mismatch, the logs showed it running the migration and creating the superuser, but when I tried to access it by the URL, I got this error in the browser::
+After resolving the image architecture mismatch, the logs showed it
+running the migration and creating the superuser, but when I tried to
+access it by the URL, I got this error in the browser::
 
   NotSupportedError at /
   PostgreSQL 12 or later is required (found 11.18).
@@ -123,17 +123,18 @@ gave this trust error::
   Origin checking failed - https://XXX.eu-west-3.awsapprunner.com does
   not match any trusted origins.
 
-So edit the ``dev.py`` to add a wildcard for my region's domain::
+So edit the ``dev.py`` to add a wildcard for my Paris region's
+domain::
 
   CSRF_TRUSTED_ORIGINS=[
     'https://\*.us-east-1.awsapprunner.com',
     'https://\*.eu-west-3.awsapprunner.com',
   ]
 
-(The backslash in the RST protect the asterisk, but won't show in the
-rendered HTML, and are not used in the .py file.)
+(The backslash in the RST above protect the asterisk, but won't show
+in the rendered HTML, and are not used in the .py file.)
 
-S3 Storage Presigned URLs Don't Work
+S3 Storage Presigned URLs Didn't Work
 ====================================
 
 When using django-storages to store media and static assets on S3, the
@@ -173,6 +174,9 @@ not generate presigned URLs::
                 "querystring_auth": False  # don't generate presigned URLs, they fail now
             },
     },
+
+This got the site to render, after I ran ``collectstatic`` locally.
+But image and document uploads failed.
 
 Wagtail Upload fails on /add timeout
 ====================================

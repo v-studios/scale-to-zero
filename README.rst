@@ -1,16 +1,14 @@
-====================================================
- Wagtail on App Runner with Aurora Serverless v1 DB
-====================================================
+========================================================
+ Wagtail CMS on App Runner with Aurora Serverless v1 DB
+========================================================
 
 AWS `App Runner <https://aws.amazon.com/apprunner/>`_ is ideally
-suited for running pure HTTP apps that don't need features Fargate
-provides. The config is much simpler, it auto-scales based on demand,
-and it includes its own load balancer. As of February 2022, it can
-access things in a VPC, so we can have our app talk to an RDS DB
-including Aurora serverless. Both can scale to zero to save money on
-sites that aren't used 24x7.
-
-Here, we deploy a stock Wagtail CMS with a PostgreSQL DB. See:
+suited for running pure HTTP apps that don't need all the features
+that `Fargate <https://aws.amazon.com/fargate/>`_ provides. The config
+is much simpler, it auto-scales based on demand, and it includes its
+own load balancer. As of February 2022, it can access things in a VPC,
+so we can have our app persist to an RDS dataase including Aurora
+serverless. See:
 
 * Excellent blog post comparing simplicity and cost: `Fargate vs. App
   Runner <https://cloudonaut.io/fargate-vs-apprunner/>`_
@@ -18,138 +16,78 @@ Here, we deploy a stock Wagtail CMS with a PostgreSQL DB. See:
   <https://www.youtube.com/watch?v=ABvx7radhw4>`_
 * AWS App Runner `FAQs <https://aws.amazon.com/apprunner/faqs/>`_
 
-[As of 2023-11-14, App Runner was NOT listed as FedRAMP certified, so
-we are not able to us it for our NASA projects yet.]
+Both App Runner and `Aurora Serverless v1
+<https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.Aurora_Fea_Regions_DB-eng.Feature.ServerlessV1.html>`_
+can scale to zero to save money on sites that aren't used 24x7. When
+requests subside, App Runner saves the state to RAM to allow instant
+restart, and charges about 1/10th the cost of running with CPU. When
+Aurora Serverless v1 sleeps, it takes about 30 soconds to wake up.
 
-Gave Up on Source Code Triggers
-===============================
+This code deploys a stock `Wagtail CMS <https://wagtail.org/>`_ (based
+on `Django <https://www.djangoproject.com/>`_) with PostgreSQL DB and
+S3 storage for media. We're not trying to demo a full-blown Wagtail
+app here, just using the out-of-box experience to demonstrate
+scalability of a sophisticated CMS
 
-App Runner has a mode where it can build and deploy on commit, like
-Heroku does, by defining a top-level ``apprunner.yaml`` file that
-describes ``pre-build``, ``build``, ``post-build``, and ``run``
-commands (and a few others). It appears to take these commands and
-build a Docker image, which it then deploys and runs.
+The `<DEVELOPMENT.rst>`_ describes how to get it running, so this
+README will focus on high-level topics. `<TROUBLESHOOTING.rst>`_ gives
+some hard-won lessons learned, while `<QUESTIONS_CAUTIONS.rst>`_ has
+some gotchas, and `<TODO.rst>`_ is a grab bag of things that might be
+worth improving.
 
-I've had little success with it, however. It runs a variant of Amazon
-Linux 2, but has an ancient version of Sqlite3 that doesn't support
-Django, and using AWS' EPEL repo just installs the same 3.7 version. I
-even got it to download and build from source, but did not seem to be
-able to get that prebuild step to make Sqlite3 available in the run
-step. Does the BUILD process run in a separate container?
-
-I was finally able to get it to almost work by doing all the build
-steps in the BUILD phase (caveat: any ``cd`` commands are sticky, each
-step is not atomic and isolated), but invoking ``./manage.py`` could not find module ``django``.
-
-We'd like to see what their custom AmazonLinux2+Python image has but
-it's not publicly available; the logs show::
-
-  [Build] Step 1/9 : FROM 082388193175.dkr.ecr.us-east-1.amazonaws.com/awsfusionruntime-python3:3.8
-
-After messing with this build-on-commit mode, I decided that it would
-be better to build separately a Docker image on a base image that had
-a working Sqlite3, which the rest of this doc uses.
+(As of 2023-11-14, App Runner was not listed as FedRAMP certified, so
+we are not able to us it for our US Government projects yet.)
 
 
-Docker-based Deployment: Manual
-===============================
+Architecture
+============
 
-I created a multi-stage Dockerfile that installs Wagtail, with a
-``start.sh`` for the ``RUN`` that migrates and runs wagtail. Now I
-want to deploy it to App Runner.
+Aurora is RDS, and RDS needs to be deployed into a VPC. I created a
+VPC with two Public Subnets so I don't have to run APIGW and incur
+it's $70/month cost. A `VpcConnector
+<https://docs.aws.amazon.com/apprunner/latest/api/API_VpcConnector.html>`_
+is used to allow App Runner access to RDS. Security Groups restrict
+access to the DB, while IAM roles allow App Runner to access ECR,
+Logs, and S3.
 
-Initially, in the App Runner console I created a service from ECR and told it to
-create the required IAM Role allowing App Runner to access ECR.
+There's an S3 bucket for Wagtail media (images, documents) and static
+resources (e.g., css, js). I found I had to create a `VPC Endpoint
+<https://www.alexdebrie.com/posts/aws-lambda-vpc/>`_ for App Runner to
+be able to access this. Our stateless service uses `Django Storages
+<https://django-storages.readthedocs.io/en/latest/>`_ is used to
+read/write S3 objects; interestingly, it uses presigned URLs to access
+these resources, so we don't need to give our objects public-read
+access.
 
-It deployed and runs it, I can see it in the provided URL.
+The developer creates a Docker image with Wagtail and uploads to
+`Elastic Container Registry (ECR) <https://aws.amazon.com/ecr/>`_. App
+Runner will see new images and deploy them automatically. Once the
+healthcheck probe is successful, it directs traffic to the new service
+instance instead of the old.
 
-However when I try to login it complains::
-
-  Forbidden (403)
-  CSRF verification failed. Request aborted.
-  Origin checking failed - https://2mmyr8wk23.us-east-1.awsapprunner.com does not match any trusted origins.
-
-I didn't see this when run locally, but I fixed it in AWS by adding a
-custom ``dev.py`` settings file that Docker uses, and this works::
-
- CSRF_TRUSTED_ORIGINS=['https://*.us-east-1.awsapprunner.com']
-
-Hitting the Deploy button again grabs the latest image with the same
-name:tag; it takes about 5 minutes to become live.
-
-The ``Makefile`` has a default target that builds, tags, and uploads
-an image to ECR called ``wagrun``. If no ECR exists, it creates one.
-Images are tagged based on environment: ``:dev``, ``:qa``, ``:prod``.
-We ensure that the CloudFormation top level stacks (e.g.,
-``dev.yaml``) specify the correct ECR.
-
-
-Docker-based Deployment: Automate with CloudFormation
-=====================================================
-
-We'll build a VPC, subnets, and everything the service needs using
-CloudFormation, everything is in the ``aws/`` directory. It uses
-nested stacks for VPC, RDS, and App Runner; the top level stack passes
-outputs from one stack to the next which uses them. Currently there is
-only a ``wagrun-dev.yaml`` top level stack.
-
-The ``Makefile`` has a default target that copies the sub-stack files,
-then deploys the parent ``dev.yaml`` stack with CloudFormation.
-
-The overall architecture looks like this:
+TODO: update image with current diagram.
 
 .. image:: wagrun-arch.png
            :width: 100%
 
 
-VPC for RDS
------------
+Scaling
+=======
 
-We'll need a VPC for RDS and it has to export its subnets and security
-groups so we can reference them in the App Runner config. We do that
-with ``vpc.yaml``. We create "public" subnets to avoid the cost of NAT
-Gateway, and deploy the RDS and App Runner's "VPC Connector" there.
+We run Aurora Serverless v1 because it can scale to zero capacity, and
+App Runner because it scales to zero (pay only for RAM). This should
+save us money, especially on development or other low-use
+environments. They both scale up based on their configurations to
+handle load.
 
-We do not define the ECR in this CloudFormation because when the App
-Runner service launches, it needs to be able to find the image in the
-ECR; when it cannot, it rolls back the entire stack. That's why we
-created the ECR in the top-level Makefile, so we could have an image
-already installed. This allows us to build, tag, and push images
-independent of the AWS nested stacks -- for all environments.
-
-Django ``DATABASE_URL`` did not work for me
--------------------------------------------
-
-We want to be able to set the Database based on our environment with
-runtime environment variables, per the Twelve-Factor App pattern.
-Django has an add-on `dj-database-url
-<https://pypi.org/project/dj-database-url/>`_ which allows us to
-specify all the parts of the database connection in one variable,
-like::
-
-  DATABASE_URL="sqlite:////tmp/db.sqlite3"
-  DATABASE_URL="postgres://dbuser@ChangeMe/wagrundev.cluster-cwdazoayirv4.us-east-1.rds.amazonaws.com:5432/wagrundev"
-
-I was able to get this to run locally like::
-
-  docker run -it --rm -p 8000:8000 -e DATABASE_URL="sqlite:////tmp/db.sqlite3" wagrun:dev
-
-But when I moved to PostgreSQL on App Runner with::
-
-    DATABASE_URL="postgres://dbuser:ChangeMe@wagrun-dev-db-1zu57g3uqx51-database-ghv5kxp65q1z.cluster-cwdazoayirv4.us-east-1.rds.amazonaws.com:5432/wagrun"
-
-it seemed to parse badly and PostgreSQL complained that the database
-"name" was longer than the permitted 63 characters.
-
-I've now gone back to setting each DB parameter separately.
 
 RDS Aurora Serverless v1
 ------------------------
 
 Our goal is to reduce cost by scaling to zero. AWS RDS Aurora
 Serverless v1 does this natively: if no connections are seen for some
-time, it spins down the container. When a connection comes in, it
-spins it back up.
+time, it pauses the DB. When a connection comes in, it spins it back
+up.
 
 We create our Aurora DB in the ``db.yaml`` file, and specify a
 5-minute pause timeout::
@@ -160,72 +98,54 @@ We create our Aurora DB in the ``db.yaml`` file, and specify a
     MinCapacity: 2
     SecondsUntilAutoPause: 300
 
+Aurora PostgreSQL-13.9 config page shows::
 
-Connect App Runner to RDS in VPC
-================================
+  Autoscaling timeout: 5 minutes
+  Pause compute capacity after consecutive minutes of inactivity: 5 minutes
 
-There are 2 public subnets in the VPC, and both App Runner and RDS are
-there there. Initially, App Runner was not able to connect to the DB
-and the image deployment and App Runner appeared to roll back to the
-last known good image, which was actually one running with Sqlite3.
-These articles helped:
+We can see pause/resume events::
 
-* https://docs.aws.amazon.com/apprunner/latest/dg/network-vpc.html
-* https://aws.amazon.com/blogs/aws/new-for-app-runner-vpc-support/
+  November 15, 2023, 18:18 The DB cluster is being paused.
+  November 15, 2023, 18:19 The DB cluster is paused.
+  November 15, 2023, 18:41 The DB cluster is being resumed.
+  November 15, 2023, 18:42 The DB cluster is resumed.
+  November 15, 2023, 18:48 Scaling DB cluster from 2 capacity units to
+                           4 capacity units for this reason: Autoscaling.
+  November 15, 2023, 18:48 The DB cluster has scaled from 2 capacity
+                           units to 4 capacity units.
 
-The ``vpc.yaml`` now defines two security groups. The ``apprunner-sg``
-is simply used to mark the App Runner service, and the ``db-sg``
-specifies that any resource having that SG is allowed to access the
-RDS DB on the PostgreSQL port.
+Under the Databases "Monitoring" tab we can see DB Connections and
+Serverless Database Capacity:
 
-I validated this by launching an Ubuntu EC2 into a subnet in the VPC,
-added the App Runner SecurityGroup to it, and was able to access the
-DB::
+.. image:: db-connections.png
+           :height: 200
+.. image:: db-capacity.png
+           :height: 200
 
-  $ psql -h wagrundev.cluster-cwdazoayirv4.us-east-1.rds.amazonaws.com -U dbuser  -d wagrundev
-  Password for user dbuser:
-  psql (14.3 (Ubuntu 14.3-0ubuntu0.22.04.1), server 11.13)
-  wagrundev=> \dt
-  Did not find any relations.
-  wagrundev=>
-
-However, the connection seemed to timeout at first. Perhaps it did not
-wait long enough for the Aurora Serverless DB to start up.
-
-Now that connectivity is working, and our App Runner service has the
-marker SecurityGroup, I forced a relaunch of Django with the AWS WebUI
-DEPLOY button.
-
-On the EC2, I hit ``\dt`` and watched as wagtail tables were created!
-I went to the app's link (NASA Firewall currently blocks App Runner
-URLs) and edit the home page title which is displayed in the browser
-title header. It shows up there. Back on EC2 I query the DB to ensure
-it stuck::
-
-  ...
-  3 | 00010001 |     2 |        0 | Home (edited) | home | t    | f                       | /home/   |           | f             |                    |            |           | f       |               2 |          | f      | 2022-08-12 20:32:27.371235+00 | 2022-08-12 20:32:27.442296+00 |                2 | 2022-08-12 20:32:27.442296+00 | Home (edited) |           |              | a4fd16b4-8098-418f-bcfd-dec1db4df038 |         1 |
-
-Notice ``Home (edited)`` twice above. Huzzah!
-
-Verifying Scale to Zero
-=======================
-
-We should be able to "scale to zero" both the App Runner service and
-its Aurora Serverless DB to save AWS costs.
 
 App Runner
 ----------
 
-App Runner's CloudFormation allows you to specify the ARN of a
-pre-defined AutoScalingConfiguration, but there doesn't appear to be a
-way to create this configuration with CloudFormation yet. When I tried
-the CLI and WebUI, I found I could not set a minimum of 0, it had to
-be 1 or more. This suggests that this config is not how to request
-scale-to-zero.
+The "Auto scaling" section of the App Runner > Services > scale0-dev >
+Connfiguration shows::
 
-We have to ensure that Wagtail doesn't leave a persistent connection
-to the database. In the `Django Databases docs
-<https://docs.djangoproject.com/en/4.1/ref/databases/>`_ it says:
+  Name:              DefaultConfiguration
+  Revision number:   1
+  Concurrency:     100
+  Minimum size:      1
+  Maximum size:     25
+
+It will accept 100 concurrent requests before scaling up, to a maximum
+of 25 instances. This should be fine.
+
+We could create an `auto scaling configuration
+<https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apprunner-autoscalingconfiguration.html>`_
+and reference it by ARN in the App Runner config but it's not
+necessary for this test now.
+
+We currently ensure that Wagtail doesn't leave a persistent connection
+to the database. The `Django Databases docs
+<https://docs.djangoproject.com/en/4.1/ref/databases/>`_ say:
 
   Persistent connections avoid the overhead of reestablishing a
   connection to the database in each request. They’re controlled by
@@ -250,6 +170,8 @@ instances; the graph shoes zero at 2022-08-12 19:00, one between 20:00
 and 21:00, then back to zero at 22:00; zooming into the 12th shows it
 spiking more granularly:
 
+TODO update images
+
 .. image:: active-instances-week.png
            :height: 200
 .. image:: active-instances-day.png
@@ -257,118 +179,43 @@ spiking more granularly:
 
 So we can conclude App Runner is scaling to zero as desired.
 
-Aurora Serverless
------------------
 
-Presumably the Database will pause when there are no active
-connections for a while, after our 5 minute configuration. Under the
-Databases "Monitoring" tab we can see DB Connections and Serverless
-Database Capacity:
-
-.. image:: db-connections.png
-           :height: 200
-.. image:: db-capacity.png
-           :height: 200
-
-TODO
-====
-
-Some ideas to explore if we want to pursue this.
-
-DB timeout
-----------
-
-If Wagtail fails to connect to the database because the DB has paused,
-we may have to increase the time it waits for a valid connection.
-Django Database configuration allows you to specify ``OPTIONS``. For
-`PostgreSQL
-<https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-PARAMKEYWORDS>`_,
-we would set ``connect_timeout``. So we might have something like::
-
-      DATABASES['default'] = {
-          "ENGINE": "django.db.backends.postgresql",
-          "HOST": database_host,
-          "PORT": database_port,
-          "NAME": database_name,
-          "USER": database_user,
-          "PASSWORD": database_password,
-          "OPTIONS": {
-                  "connect_timeout": 42,
-          },
-      }
-
-S3 storage
-----------
-
-For a real applications, we need persistence for our media and assets.
-As we do with TTT2 and ALPS, we should create an S3 bucket, in a
-CloudFormation template ``s3.yaml``. Then add the correct package and
-configuration settings to our Django config. We probably will have to
-create an S3 VPC Endpoint, like we did for OCREVA which had Lambdas in
-a VPC.
-
-
-TTT2, NCRP, ALPS
-----------------
-
-This stock Wagtail deployment was designed to explore App Runner and
-Aurora Serverless, not to be a full Wagtail app.
-
-We'd like to get our non-government Wagtail applications deployed in
-this "scale to zero" manner.
-
-ALPS cannot use this because App Runner is not FedRAMP certified. We
-should reach out to our EAST2 AWS support people to see if they have
-an estimate, even if it's not a commitment. Of course there's no
-reason why we couldn't deploy it as a test on App Runner in the WSO1
-Dev account we're using now.
-
-We should ask the folks running WSO2 if they will allow App Runner
-when it is FedRAMPed. We have found that many FedRAMPed services are
-disabled for us by IAM Permission restrictions.
-
-MOAR subnets
+Load Testing
 ------------
 
-Some docs I have read recommend using 3 different Availability Zones,
-instead of the 2 we typically use. That makes sense: it provides more
-resilience.
+If we can run a load tester against it that submits over 100
+concurrent requests, we should see it scale.
 
-Just update the ``vpc.yaml`` CloudFormation to create another subnet
-and output it for consumption by the other sub-stacks.
+I can use the simple `hey <https://github.com/rakyll/hey>`_ tool to
+load test. The following runs for 1 minute, with a concurrency of 150::
 
-Custom DNS domain
------------------
+  hey -c 150 -z 1m https://ykcgyztfmf.eu-west-3.awsapprunner.com/
 
-The AWS WebUI allows you to map a custom DNS domain to your App Runner
-service, but it's not available yet in CloudFormation.
+When I ran this, I watched the Concurrency and Instances grow in the
+AWS console.
 
-Database migration as a singleton
----------------------------------
+TODO insert graphs
 
-In TTT2's Prod environment we launch 2 EC2s for redundancy (if one
-dies, the other will handle traffic so users experience no outage).
-But when both booted for the first time from CloudFormation and ran
-the Django migration, one of the two failed because the other had
-already started seconds before. This caused the entire CloudFormation
-deploy to roll-back. We had never seen this in Dev or QA, because we
-only run one EC2 there. We had to do some complex work to wait for
-CloudFormation to complete, query to find the newest instance, then
-use AWS Systems Manager "Run Command" feature to send the
-``./manage.py migrate`` to its Docker container.
+But we also saw 500 errors from App Runner; the app logs said::
 
-AWS App Runner abstracts the EC2s away, so I don't see an easy way to
-remotely run a one-off command in one of its containers. The `CLI
-commands
-<https://docs.aws.amazon.com/cli/latest/reference/apprunner/index.html>`_
-don't have anything useful. AWS Systems Manager does not seem to apply
-to App Runner.
+ FATAL: remaining connection slots are reserved for non replicate
+ superuser connections
 
-Could we set up a separate, parallel App Runner service that uses the
-same image, but has a different Docker ``RUN`` command that just runs
-the migration, with the newest code and models in the image? How would
-we end the service? with AWS CLI commands?
+I believe this indicates we've run out of PostgreSQL connections. See
+the `<TODO.rst>`_ section about enabling persistent connections. I
+don't know if we would get more if we waited for Aurora to scale up
+the service, or if we have to increase the pool size in the DB
+configuration.
 
-If we were doing this in Fargate, we'd use a short-lived "task" to do
-this. But we're hoping to avoid the hassle of Fargate by using App
-Runner.
+
+Verdict
+=======
+
+App Runner scales to zero, costing only the RAM at about $0.01/hour.
+Aurora Serverless v1 scales to zero, so we only pay for the data
+storage. Estimated total cost for both, for a 8 hour/day, 5 days/week,
+is under $30: cheap enough that every developer can have their own.
+
+For production environments, App Runner should be fine too, but we'd
+probably want to look at Aurora Serverless v2 to avoid cold start
+delays and scale faster.
