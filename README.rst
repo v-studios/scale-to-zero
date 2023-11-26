@@ -65,7 +65,7 @@ Runner will see new images and deploy them automatically. Once the
 health check probe is successful, it directs traffic to the new service
 instance instead of the old.
 
-TODO.. image:: img/scale0-architecture.png
+.. image:: img/scale0-architecture.png
            :width: 100%
 
 
