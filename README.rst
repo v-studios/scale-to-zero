@@ -65,9 +65,7 @@ Runner will see new images and deploy them automatically. Once the
 health check probe is successful, it directs traffic to the new service
 instance instead of the old.
 
-TODO: update image with current diagram.
-
-.. image:: wagrun-arch.png
+TODO.. image:: img/scale0-architecture.png
            :width: 100%
 
 
@@ -75,10 +73,10 @@ Scaling
 =======
 
 We run Aurora Serverless v1 because it can scale to zero capacity, and
-App Runner because it scales to zero (pay only for RAM). This should
-save us money, especially on development or other low-use
-environments. They both scale up based on their configurations to
-handle load.
+App Runner because it scales to zero running instances (pay only for
+RAM). This should save us money, especially on development or other
+low-use environments. They both scale up based on their configurations
+to handle load.
 
 
 RDS Aurora Serverless v1
@@ -114,14 +112,23 @@ We can see pause/resume events::
   November 15, 2023, 18:48 The DB cluster has scaled from 2 capacity
                            units to 4 capacity units.
 
-Under the Databases "Monitoring" tab we can see DB Connections and
-Serverless Database Capacity:
+Under the Databases "Monitoring" tab we can see graphs showing DB Connections and
+Serverless Database Capacity (these are over different time periods):
 
-.. image:: db-connections.png
+.. image:: img/aurora/db-connections.png
            :height: 200
-.. image:: db-capacity.png
+.. image:: img/aurora/capacity-5-day-narrow.png
            :height: 200
 
+And over time we can watch the top level status showing scaled to zero:
+
+.. image:: img/aurora/status-scaled-0.png
+           :height: 100
+
+then resume:
+
+.. image:: img/aurora/status-resumed.png
+           :height: 100
 
 App Runner
 ----------
@@ -165,19 +172,19 @@ We're not specifying ``CONN_MAX_AGE`` so should not have persistent
 connections; we're also currently running the development server,
 which does not persist.
 
-The App Runner "Metrics" tab shows at the bottom the number of "Active
-instances; the graph shoes zero at 2022-08-12 19:00, one between 20:00
-and 21:00, then back to zero at 22:00; zooming into the 12th shows it
-spiking more granularly:
+The App Runner "Metrics" tab displays at the bottom the number of active
+instances, in this case showing scale up and down during load testing:
 
-TODO update images
+.. image:: img/apprunner/load-active-instances.png
+           :height: 100
 
-.. image:: active-instances-week.png
-           :height: 200
-.. image:: active-instances-day.png
-           :height: 200
+It also shows the number of concurrent connections:
 
-So we can conclude App Runner is scaling to zero as desired.
+.. image:: img/apprunner/load-concurrency.png
+           :height: 100
+
+So we can conclude App Runner is scaling to zero as desired, and
+scales up to handle increased request concurrency.
 
 
 Load Testing
@@ -191,12 +198,16 @@ load test. The following runs for 1 minute, with a concurrency of 150::
 
   hey -c 150 -z 1m https://ykcgyztfmf.eu-west-3.awsapprunner.com/
 
+.. image:: img/apprunner/hey-output-top.png
+           :height: 200
+
 When I ran this, I watched the Concurrency and Instances grow in the
-AWS console.
+AWS console (above) but we also saw 500 errors from App Runner:
 
-TODO insert graphs
+.. image:: img/apprunner/load-500-error.png
+           :height: 100
 
-But we also saw 500 errors from App Runner; the app logs said::
+The app logs said::
 
  FATAL: remaining connection slots are reserved for non replicate
  superuser connections
