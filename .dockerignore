@@ -1,0 +1,15 @@
+.git
+.gitignore
+.python-version
+DEVELOPMENT.rst
+Dockerfile
+Makefile
+QUESTIONS_CAUTIONS.rst
+README.rst
+TODO.rst
+TROUBLESHOOTING.rst
+aws/
+img/
+
+#db/
+#media/
