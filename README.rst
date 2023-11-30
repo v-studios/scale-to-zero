@@ -224,8 +224,11 @@ Verdict
 
 App Runner scales to zero, costing only the RAM at about $0.01/hour.
 Aurora Serverless v1 scales to zero, so we only pay for the data
-storage. Estimated total cost for both, for a 8 hour/day, 5 days/week,
-is under $30: cheap enough that every developer can have their own.
+storage.
+
+Estimated total cost for both, when active for a 8 hour/day and 5
+days/week, is under $30: cheap enough that every developer can have
+their own.
 
 For production environments, App Runner should be fine too, but we'd
 probably want to look at Aurora Serverless v2 to avoid cold start
